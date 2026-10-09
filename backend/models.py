@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
 class ThreadMetrics(BaseModel):
     reach: int = Field(default=0, description="Estimated reach / views")
@@ -17,8 +17,8 @@ class ThreadPost(BaseModel):
     country: str = "ID"
     content: str
     post_url: Optional[str] = None
-    posted_at: datetime = Field(default_factory=datetime.utcnow)
-    hours_ago: int = 1
+    posted_date: str = Field(description="Format YYYY-MM-DD")
+    posted_at_formatted: str = Field(description="Human readable time e.g. 2 jam lalu atau 08 Okt 2026")
     metrics: ThreadMetrics
 
 class TagSummary(BaseModel):

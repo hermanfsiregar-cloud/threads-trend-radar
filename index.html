@@ -48,7 +48,7 @@
               <span class="w-2 h-2 rounded-full bg-slate-400"></span> Memeriksa Backend...
             </span>
           </div>
-          <p class="text-xs text-[#475569] mt-0.5">Scraping on-demand: Tagging kustom atau Top Leaderboard dengan Reach & Interaksi Tertinggi</p>
+          <p class="text-xs text-[#475569] mt-0.5">Analisis tren topik Threads: Filter tanggal spesifik (historis / mundur), urutan reach tertinggi, dan data riil.</p>
         </div>
       </div>
 
@@ -65,33 +65,46 @@
       </div>
     </header>
 
-    <!-- Section 1: Input Scraping Mandiri (Custom Tagging) -->
+    <!-- Section 1: Input Scraping Mandiri & Filter Tanggal -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
           <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <i class="mdi mdi-magnify-plus-outline text-[#4F46E5] text-lg"></i>
-            Scrape Tagging Baru
+            Scrape Tagging Baru & Filter Tanggal
           </h2>
-          <p class="text-xs text-[#475569]">Tag yang Anda buat akan masuk ke <strong>Saved Library</strong> & di-scrape langsung dari backend Python.</p>
+          <p class="text-xs text-[#475569]">Default menampilkan data <strong>Hari Ini</strong>. Anda juga bisa memilih tanggal lampau untuk riset historis.</p>
         </div>
         <div class="flex items-center gap-2 text-xs text-[#475569]">
-          <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-700">Total Tracked: <strong id="totalTagsCount" class="text-[#4F46E5]">0</strong> Topik</span>
+          <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-700">Tanggal Aktif: <strong id="activeDateBadge" class="text-[#4F46E5]">Hari Ini</strong></span>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
         <!-- Tagging Input -->
-        <div class="md:col-span-5 relative">
+        <div class="md:col-span-4 relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             <i class="mdi mdi-pound text-lg text-[#4F46E5]"></i>
           </div>
           <input 
             type="text" 
             id="customTagInput" 
-            placeholder="Ketik topik baru (misal: kopi susu, lowongan kerja, diet sehat)..." 
+            placeholder="Ketik topik baru (misal: v60, lowongan, startup)..." 
             class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition"
             onkeypress="if(event.key==='Enter') handleNewScrap()"
+          />
+        </div>
+
+        <!-- Date Filter (Bisa Mundur / Historis) -->
+        <div class="md:col-span-3 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <i class="mdi mdi-calendar-range text-lg text-[#4F46E5]"></i>
+          </div>
+          <input 
+            type="date" 
+            id="targetDateInput" 
+            onchange="onDateChanged()"
+            class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition"
           />
         </div>
 
@@ -100,27 +113,12 @@
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <i class="mdi mdi-earth text-lg text-[#475569]"></i>
           </div>
-          <select id="countrySelect" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+          <select id="countrySelect" onchange="fetchPosts()" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
             <option value="ID" selected>🇮🇩 Indonesia (ID)</option>
             <option value="GLOBAL">🌐 Global (Semua Wilayah)</option>
             <option value="MY">🇲🇾 Malaysia (MY)</option>
             <option value="SG">🇸🇬 Singapore (SG)</option>
             <option value="US">🇺🇸 United States (US)</option>
-          </select>
-          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-            <i class="mdi mdi-chevron-down text-base"></i>
-          </div>
-        </div>
-
-        <!-- Metric Priority -->
-        <div class="md:col-span-2 relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <i class="mdi mdi-tune-vertical text-lg text-[#475569]"></i>
-          </div>
-          <select id="scrapeSortSelect" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
-            <option value="reach" selected>🔥 Max Reach</option>
-            <option value="replies">💬 By Replies</option>
-            <option value="newest">🕒 Terbaru Hari Ini</option>
           </select>
           <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
             <i class="mdi mdi-chevron-down text-base"></i>
@@ -136,18 +134,21 @@
         </div>
       </div>
 
-      <!-- Tag History / Saved Tag Library -->
-      <div class="pt-2 flex flex-wrap items-center gap-2">
-        <span class="text-xs text-[#475569] font-medium flex items-center gap-1">
-          <i class="mdi mdi-bookmark-multiple-outline text-sm"></i> Saved Library Saya:
-        </span>
+      <!-- Quick Preset Tanggal & Saved Tags -->
+      <div class="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-t border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-[#475569] font-medium">Shortcut Tanggal:</span>
+          <button onclick="setPresetDate(0)" id="btnDateToday" class="px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white">Hari Ini</button>
+          <button onclick="setPresetDate(1)" id="btnDateYesterday" class="px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100">Kemarin</button>
+          <button onclick="setPresetDate(2)" id="btnDate2DaysAgo" class="px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100">2 Hari Lalu</button>
+        </div>
         <div id="activeTagsContainer" class="flex flex-wrap gap-1.5">
           <!-- Rendered via JS -->
         </div>
       </div>
     </div>
 
-    <!-- Section 2: Summary Leaderboard Tagging Threads -->
+    <!-- Section 2: Summary Leaderboard Tagging Threads (Dengan Pagination 10 per halaman) -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
@@ -155,24 +156,15 @@
             <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-[#F59E0B] flex items-center justify-center font-bold">
               <i class="mdi mdi-trending-up text-lg"></i>
             </div>
-            <h2 class="text-base font-bold text-slate-900">Summary Trending Tagging Threads</h2>
+            <h2 class="text-base font-bold text-slate-900">Top 20 Trending Tagging Threads</h2>
           </div>
           <p class="text-xs text-[#475569] mt-0.5">
-            Diurutkan berdasarkan <strong><span id="currentSortLabel">Total Est. Reach Tertinggi</span></strong> per hari ini
+            Menampilkan 10 tag per halaman agar tidak menumpuk. Diurutkan berdasarkan <strong><span id="currentSortLabel">Total Est. Reach</span></strong>.
           </p>
         </div>
         
-        <!-- Controls: View Limit (20, 50, All) & Sort Criteria -->
+        <!-- Controls: Sort Criteria & Tag Pagination -->
         <div class="flex flex-wrap items-center gap-3">
-          
-          <!-- Limit Selector -->
-          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-medium">
-            <span class="text-[#475569] px-2 text-[11px]">Tampilkan:</span>
-            <button onclick="setViewLimit(20)" id="btnLimit20" class="px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition">Top 20</button>
-            <button onclick="setViewLimit(50)" id="btnLimit50" class="px-2.5 py-1 rounded-lg text-[#475569] hover:text-slate-900 transition">Top 50</button>
-            <button onclick="setViewLimit(null)" id="btnLimitAll" class="px-2.5 py-1 rounded-lg text-[#475569] hover:text-slate-900 transition">Semua</button>
-          </div>
-
           <!-- Sort Criteria -->
           <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
             <button onclick="changeSortCriteria('reach')" id="btnSortTagReach" class="px-3 py-1.5 rounded-lg font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1">
@@ -186,16 +178,26 @@
             </button>
           </div>
 
+          <!-- Tag Paging Controls (Next / Prev) -->
+          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
+            <button onclick="prevTagPage()" id="btnPrevTags" class="px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
+              <i class="mdi mdi-chevron-left text-sm"></i> Prev
+            </button>
+            <span id="tagPageInfo" class="px-2 text-[11px] font-mono font-semibold text-slate-700">Hal 1 / 2</span>
+            <button onclick="nextTagPage()" id="btnNextTags" class="px-2.5 py-1 rounded-lg bg-white text-slate-800 shadow-sm hover:bg-slate-50 flex items-center gap-1">
+              Next <i class="mdi mdi-chevron-right text-sm"></i>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Grid Leaderboard Tags -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="top20TagsGrid">
+      <!-- Grid Leaderboard Tags (10 Cards per Page) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="top20TagsGrid">
         <!-- Rendered by JS / Skeleton -->
       </div>
     </div>
 
-    <!-- Section 3: Detail Hasil Scraping Postingan Threads -->
+    <!-- Section 3: Detail Hasil Scraping Postingan Threads (Dengan Paging Kelipatan 5) -->
     <div class="space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
@@ -203,13 +205,25 @@
             <i class="mdi mdi-card-text-outline text-[#4F46E5] text-xl"></i>
             Daftar Postingan Terfilter: <span id="currentFilterTagTitle" class="text-[#4F46E5] font-mono">#coffee</span>
           </h2>
-          <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan interaksi dan jangkauan tertinggi</p>
+          <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan jangkauan tertinggi</p>
         </div>
 
-        <!-- Filter & Sorting Bar for Posts -->
-        <div class="flex items-center gap-2.5">
+        <!-- Filter & Sorting Bar for Posts (Kelipatan 5 & Paging) -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Page Size (Kelipatan 5) -->
+          <div class="flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-sm text-xs">
+            <span class="text-[#475569]">Tampilkan:</span>
+            <select id="postPageSizeSelect" onchange="onPostPageSizeChange()" class="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer">
+              <option value="5" selected>5 Post</option>
+              <option value="10">10 Post</option>
+              <option value="15">15 Post</option>
+              <option value="20">20 Post</option>
+            </select>
+          </div>
+
+          <!-- Sort Method -->
           <div class="relative">
-            <select id="postSortFilter" onchange="fetchPosts()" class="pl-8 pr-7 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] appearance-none shadow-sm">
+            <select id="postSortFilter" onchange="fetchPosts(1)" class="pl-8 pr-7 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] appearance-none shadow-sm">
               <option value="reach" selected>🔥 Tertinggi Est. Reach</option>
               <option value="replies">💬 Tertinggi Komentar (Replies)</option>
               <option value="likes">❤️ Tertinggi Likes</option>
@@ -219,6 +233,7 @@
             <i class="mdi mdi-chevron-down absolute right-2 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
           </div>
 
+          <!-- Total Post Badge -->
           <span class="text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 text-[#475569] font-medium shadow-sm flex items-center gap-1" id="postCountBadge">
             <i class="mdi mdi-database text-xs text-[#4F46E5]"></i> 0 Postingan
           </span>
@@ -229,21 +244,85 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="postsGrid">
         <!-- Rendered by JS -->
       </div>
+
+      <!-- Pagination Footer for Posts (Next / Previous) -->
+      <div class="flex items-center justify-between bg-white border border-slate-200 rounded-2xl px-5 py-3.5 shadow-sm text-xs text-[#475569]">
+        <div id="postsPagingInfo">Menampilkan 1 - 5 dari 5 postingan</div>
+        <div class="flex items-center gap-2">
+          <button onclick="prevPostPage()" id="btnPrevPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
+            <i class="mdi mdi-chevron-left text-sm"></i> Sebelumnya
+          </button>
+          <span id="postPageIndicator" class="font-mono font-semibold text-slate-800 px-2">Hal 1 / 1</span>
+          <button onclick="nextPostPage()" id="btnNextPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm">
+            Selanjutnya <i class="mdi mdi-chevron-right text-sm"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
   </div>
 
   <script>
-    // Konfigurasi Endpoint Backend FastAPI
     const API_BASE_URL = "http://127.0.0.1:8000";
 
+    // State Management
+    let currentTagPage = 1;
+    const tagPageSize = 10; // Persis 10 per halaman sesuai permintaan
+    let totalTagPages = 2;
+
+    let currentPostPage = 1;
+    let postPageSize = 5; // Default kelipatan 5
+    let totalPostPages = 1;
+
     let currentSortCriteria = 'reach'; 
-    let currentLimit = 20; 
     let activeTag = "coffee";
+    let activeDate = getTodayFormatted(); // Default hari ini (YYYY-MM-DD)
     let customTagsList = ["#coffee", "#skincare", "#kuliner", "#startup", "#finansial"];
     let currentPostsData = [];
 
-    // 1. Cek Koneksi ke Backend Python
+    function getTodayFormatted() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    }
+
+    // Initialize Date Input Default ke Hari Ini
+    document.getElementById("targetDateInput").value = activeDate;
+
+    // Shortcut Date Preset
+    function setPresetDate(offsetDays) {
+      const d = new Date();
+      d.setDate(d.getDate() - offsetDays);
+      activeDate = d.toISOString().split('T')[0];
+      document.getElementById("targetDateInput").value = activeDate;
+
+      // Update button visual
+      document.querySelectorAll('#btnDateToday, #btnDateYesterday, #btnDate2DaysAgo').forEach(b => {
+        b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100";
+      });
+      if (offsetDays === 0) {
+        document.getElementById("btnDateToday").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
+        document.getElementById("activeDateBadge").textContent = "Hari Ini";
+      } else if (offsetDays === 1) {
+        document.getElementById("btnDateYesterday").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
+        document.getElementById("activeDateBadge").textContent = "Kemarin";
+      } else {
+        document.getElementById("btnDate2DaysAgo").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
+        document.getElementById("activeDateBadge").textContent = activeDate;
+      }
+
+      fetchPosts(1);
+    }
+
+    function onDateChanged() {
+      activeDate = document.getElementById("targetDateInput").value || getTodayFormatted();
+      document.getElementById("activeDateBadge").textContent = activeDate;
+      document.querySelectorAll('#btnDateToday, #btnDateYesterday, #btnDate2DaysAgo').forEach(b => {
+        b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100";
+      });
+      fetchPosts(1);
+    }
+
+    // 1. Cek Backend Python
     async function checkBackendStatus() {
       const badge = document.getElementById("backendBadge");
       try {
@@ -251,17 +330,16 @@
         if (res.ok) {
           badge.className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex items-center gap-1";
           badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Python API Connected`;
-        } else {
-          throw new Error();
         }
       } catch (err) {
         badge.className = "text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-200 flex items-center gap-1";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Local Standalone Mode (Backend Offline)`;
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Backend Offline (Local Mode)`;
       }
     }
 
-    // 2. Fetch Leaderboard Tags dari API Backend
-    async function fetchTags() {
+    // 2. Fetch Tags dengan Pagination (10 per halaman)
+    async function fetchTags(page = 1) {
+      currentTagPage = page;
       const container = document.getElementById("top20TagsGrid");
       container.innerHTML = Array(10).fill(0).map(() => `
         <div class="p-3.5 rounded-2xl border border-slate-100 bg-white animate-pulse">
@@ -272,21 +350,44 @@
       `).join("");
 
       try {
-        const limitParam = currentLimit ? `&limit=${currentLimit}` : '';
-        const res = await fetch(`${API_BASE_URL}/api/tags?sort_by=${currentSortCriteria}${limitParam}`);
-        if (!res.ok) throw new Error("Gagal mengambil data tags");
-        const tags = await res.json();
+        const res = await fetch(`${API_BASE_URL}/api/tags?sort_by=${currentSortCriteria}&page=${currentTagPage}&page_size=${tagPageSize}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
         
-        document.getElementById("totalTagsCount").textContent = tags.length;
-        renderTags(tags);
+        totalTagPages = data.pagination.total_pages;
+        updateTagPagingControls(data.pagination);
+        renderTagsUI(data.items);
       } catch (err) {
-        console.warn("Fallback local mock tags:", err);
-        // Fallback jika backend belum dinyalakan
-        renderLocalFallbackTags();
+        console.warn("Using fallback tags:", err);
       }
     }
 
-    function renderTags(tags) {
+    function updateTagPagingControls(pagination) {
+      document.getElementById("tagPageInfo").textContent = `Hal ${pagination.page} / ${pagination.total_pages}`;
+      
+      const prevBtn = document.getElementById("btnPrevTags");
+      const nextBtn = document.getElementById("btnNextTags");
+
+      prevBtn.disabled = !pagination.has_prev;
+      prevBtn.className = pagination.has_prev 
+        ? "px-2.5 py-1 rounded-lg bg-white text-slate-800 shadow-sm hover:bg-slate-50 flex items-center gap-1"
+        : "px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1";
+
+      nextBtn.disabled = !pagination.has_next;
+      nextBtn.className = pagination.has_next 
+        ? "px-2.5 py-1 rounded-lg bg-white text-slate-800 shadow-sm hover:bg-slate-50 flex items-center gap-1"
+        : "px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1";
+    }
+
+    function prevTagPage() {
+      if (currentTagPage > 1) fetchTags(currentTagPage - 1);
+    }
+
+    function nextTagPage() {
+      if (currentTagPage < totalTagPages) fetchTags(currentTagPage + 1);
+    }
+
+    function renderTagsUI(tags) {
       const container = document.getElementById("top20TagsGrid");
       container.innerHTML = tags.map(t => {
         const isSelected = activeTag === t.tag;
@@ -329,8 +430,9 @@
       }).join("");
     }
 
-    // 3. Fetch Postingan dari Backend Python
-    async function fetchPosts() {
+    // 3. Fetch Posts dengan Filter Tanggal & Paging Kelipatan 5
+    async function fetchPosts(page = 1) {
+      currentPostPage = page;
       const grid = document.getElementById("postsGrid");
       const badge = document.getElementById("postCountBadge");
       const sort = document.getElementById("postSortFilter").value;
@@ -355,16 +457,53 @@
       `).join("");
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/posts?tag=${activeTag}&country=${country}&sort_by=${sort}`);
-        if (!res.ok) throw new Error("Gagal mengambil posts");
-        const posts = await res.json();
-        currentPostsData = posts;
-        badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> ${posts.length} Postingan`;
-        renderPostsUI(posts);
+        const url = `${API_BASE_URL}/api/posts?tag=${activeTag}&country=${country}&target_date=${activeDate}&sort_by=${sort}&page=${currentPostPage}&page_size=${postPageSize}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        currentPostsData = data.items;
+        totalPostPages = data.pagination.total_pages;
+
+        badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> ${data.pagination.total_items} Postingan`;
+        updatePostPagingControls(data.pagination);
+        renderPostsUI(data.items);
       } catch (err) {
-        console.warn("Using fallback local posts:", err);
-        renderLocalFallbackPosts();
+        console.warn("Posts fetch fallback:", err);
       }
+    }
+
+    function onPostPageSizeChange() {
+      postPageSize = parseInt(document.getElementById("postPageSizeSelect").value);
+      fetchPosts(1);
+    }
+
+    function updatePostPagingControls(p) {
+      const startItem = p.total_items === 0 ? 0 : (p.page - 1) * p.page_size + 1;
+      const endItem = Math.min(p.page * p.page_size, p.total_items);
+      document.getElementById("postsPagingInfo").textContent = `Menampilkan ${startItem} - ${endItem} dari ${p.total_items} postingan (Tgl: ${activeDate})`;
+      document.getElementById("postPageIndicator").textContent = `Hal ${p.page} / ${p.total_pages}`;
+
+      const prevBtn = document.getElementById("btnPrevPosts");
+      const nextBtn = document.getElementById("btnNextPosts");
+
+      prevBtn.disabled = !p.has_prev;
+      prevBtn.className = p.has_prev
+        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm"
+        : "px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1";
+
+      nextBtn.disabled = !p.has_next;
+      nextBtn.className = p.has_next
+        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm"
+        : "px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1";
+    }
+
+    function prevPostPage() {
+      if (currentPostPage > 1) fetchPosts(currentPostPage - 1);
+    }
+
+    function nextPostPage() {
+      if (currentPostPage < totalPostPages) fetchPosts(currentPostPage + 1);
     }
 
     function renderPostsUI(posts) {
@@ -372,9 +511,9 @@
       if (posts.length === 0) {
         grid.innerHTML = `
           <div class="col-span-full text-center py-14 border border-slate-200 rounded-2xl bg-white shadow-sm">
-            <i class="mdi mdi-text-box-search-outline text-4xl text-slate-300 mb-2 block"></i>
-            <p class="text-sm font-semibold text-slate-800">Belum ada postingan tersimpan untuk tag #${activeTag}</p>
-            <p class="text-xs text-[#475569] mt-1">Ketik di form "Scrape Tagging Baru" di atas untuk menarik data topik ini secara instan.</p>
+            <i class="mdi mdi-calendar-blank-outline text-4xl text-slate-300 mb-2 block"></i>
+            <p class="text-sm font-semibold text-slate-800">Tidak ada postingan untuk #${activeTag} pada tanggal ${activeDate}</p>
+            <p class="text-xs text-[#475569] mt-1">Coba ganti filter tanggal atau pilih topik lain.</p>
           </div>
         `;
         return;
@@ -383,7 +522,7 @@
       grid.innerHTML = posts.map((p, idx) => `
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#4F46E5] hover:shadow-md transition flex flex-col justify-between group">
           <div>
-            <!-- Card Header -->
+            <!-- Header -->
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="flex items-center gap-3">
                 <img src="${p.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" alt="${p.author}" class="w-10 h-10 rounded-full object-cover border border-slate-200" />
@@ -401,7 +540,7 @@
                   ? 'bg-amber-50 text-[#D97706] border border-amber-200 font-semibold' 
                   : 'bg-slate-100 text-[#475569]'
               }">
-                #${idx + 1}
+                #${(currentPostPage - 1) * postPageSize + idx + 1}
               </span>
             </div>
 
@@ -436,10 +575,10 @@
 
             <!-- Card Footer -->
             <div class="flex items-center justify-between text-[11px] text-[#475569] pt-1">
-              <span class="flex items-center gap-1">
-                <i class="mdi mdi-clock-outline text-xs"></i> ${p.hours_ago} jam lalu
+              <span class="flex items-center gap-1 font-medium">
+                <i class="mdi mdi-calendar-clock text-xs text-[#4F46E5]"></i> ${p.posted_at_formatted}
               </span>
-              <a href="${p.post_url || 'https://threads.net'}" target="_blank" class="text-[#4F46E5] hover:text-[#4338CA] font-medium flex items-center gap-0.5 transition">
+              <a href="${p.post_url}" target="_blank" class="text-[#4F46E5] hover:text-[#4338CA] font-medium flex items-center gap-0.5 transition">
                 Buka di Threads <i class="mdi mdi-arrow-top-right text-xs"></i>
               </a>
             </div>
@@ -448,7 +587,7 @@
       `).join("");
     }
 
-    // 4. Handle Scraping Baru (Register ke API Backend)
+    // 4. Handle Scraping Topik Baru
     async function handleNewScrap() {
       const input = document.getElementById("customTagInput");
       let val = input.value.trim();
@@ -463,10 +602,9 @@
       btn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-lg"></i> Scraping...`;
 
       try {
-        // Register tag ke backend
         await fetch(`${API_BASE_URL}/api/tags/register?tag=${cleanTag}&country=${country}`, { method: "POST" });
       } catch (err) {
-        console.warn("Backend register error:", err);
+        console.warn("Backend error:", err);
       }
 
       if (!customTagsList.includes(val)) {
@@ -484,8 +622,8 @@
     function selectTag(tag) {
       activeTag = tag;
       document.getElementById("currentFilterTagTitle").textContent = "#" + tag;
-      fetchTags();
-      fetchPosts();
+      fetchTags(currentTagPage);
+      fetchPosts(1);
     }
 
     function changeSortCriteria(criteria) {
@@ -497,29 +635,16 @@
       const label = document.getElementById('currentSortLabel');
       if (criteria === 'reach') {
         document.getElementById('btnSortTagReach').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Total Est. Reach Tertinggi";
+        label.textContent = "Total Est. Reach";
       } else if (criteria === 'comments') {
         document.getElementById('btnSortTagComments').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Total Komentar (Replies) Terbanyak";
+        label.textContent = "Total Komentar";
       } else if (criteria === 'posts') {
         document.getElementById('btnSortTagPosts').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Jumlah Postingan Terbanyak";
+        label.textContent = "Jumlah Postingan";
       }
 
-      fetchTags();
-    }
-
-    function setViewLimit(limit) {
-      currentLimit = limit;
-      document.querySelectorAll('#btnLimit20, #btnLimit50, #btnLimitAll').forEach(b => {
-        b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:text-slate-900 transition";
-      });
-
-      if (limit === 20) document.getElementById('btnLimit20').className = "px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition";
-      if (limit === 50) document.getElementById('btnLimit50').className = "px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition";
-      if (limit === null) document.getElementById('btnLimitAll').className = "px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition";
-
-      fetchTags();
+      fetchTags(1);
     }
 
     function renderCustomTags() {
@@ -540,52 +665,24 @@
       renderCustomTags();
     }
 
-    // Export Data
     function exportData(type) {
-      const postsToExport = currentPostsData.length > 0 ? currentPostsData : [];
       const dataStr = type === 'json' 
-        ? "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(postsToExport, null, 2))
-        : "data:text/csv;charset=utf-8," + encodeURIComponent("ID,Tag,Author,Country,Reach,Replies,Likes,Content\n" + postsToExport.map(p => `"${p.id}","${p.tag}","${p.author}","${p.country}",${p.metrics.reach},${p.metrics.replies},${p.metrics.likes},"${p.content.replace(/"/g, '""')}"`).join("\n"));
+        ? "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentPostsData, null, 2))
+        : "data:text/csv;charset=utf-8," + encodeURIComponent("ID,Tag,Author,Country,Date,Reach,Replies,Likes,Content\n" + currentPostsData.map(p => `"${p.id}","${p.tag}","${p.author}","${p.country}","${p.posted_date}",${p.metrics.reach},${p.metrics.replies},${p.metrics.likes},"${p.content.replace(/"/g, '""')}"`).join("\n"));
       
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `threads_scraped_${activeTag}.${type}`);
+      downloadAnchor.setAttribute("download", `threads_data_${activeTag}_${activeDate}.${type}`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
     }
 
-    // Fallbacks jika backend sedang offline
-    function renderLocalFallbackTags() {
-      renderTags([
-        { rank: 1, tag: "coffee", label: "coffee", icon: "mdi-coffee", total_posts: 1240, total_reach: 1450000, total_comments: 48200, growth: "+34%" },
-        { rank: 2, tag: "skincare", label: "skincare", icon: "mdi-sparkles", total_posts: 980, total_reach: 1290000, total_comments: 56100, growth: "+28%" },
-        { rank: 3, tag: "kuliner", label: "kuliner", icon: "mdi-noodles", total_posts: 1120, total_reach: 980000, total_comments: 39500, growth: "+19%" }
-      ]);
-    }
-
-    function renderLocalFallbackPosts() {
-      renderPostsUI([
-        {
-          id: "th_fallback_01",
-          tag: activeTag,
-          author: "barista_senja",
-          handle: "@barista_senja",
-          avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
-          country: "ID",
-          content: `Data postingan untuk #${activeTag}. Silakan jalankan backend FastAPI Anda (uvicorn backend.main:app) untuk memuat data live!`,
-          post_url: "https://threads.net",
-          hours_ago: 1,
-          metrics: { reach: 142000, replies: 1240, likes: 6800, reposts: 920 }
-        }
-      ]);
-    }
-
-    // Inisialisasi
+    // Init
     checkBackendStatus();
     renderCustomTags();
-    fetchTags();
-    fetchPosts();
+    fetchTags(1);
+    fetchPosts(1);
   </script>
 </body>
 </html>
