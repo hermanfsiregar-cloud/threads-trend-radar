@@ -578,15 +578,9 @@
               <span class="flex items-center gap-1 font-medium">
                 <i class="mdi mdi-calendar-clock text-xs text-[#4F46E5]"></i> ${p.posted_at_formatted}
               </span>
-              <div class="flex items-center gap-2">
-                <a href="https://www.threads.net/${p.handle}" target="_blank" class="text-slate-500 hover:text-slate-800 text-[11px] transition" title="Lihat Profil Kreator">
-                  ${p.handle}
-                </a>
-                <span>•</span>
-                <a href="${p.post_url}" target="_blank" class="text-[#4F46E5] hover:text-[#4338CA] font-semibold flex items-center gap-0.5 transition">
-                  Lihat Thread Live <i class="mdi mdi-arrow-top-right text-xs"></i>
-                </a>
-              </div>
+              <a href="${p.post_url}" target="_blank" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white font-semibold flex items-center gap-1 transition shadow-sm" title="Buka langsung postingan spesifik ini di Threads">
+                Buka Postingan Ini <i class="mdi mdi-arrow-top-right text-xs"></i>
+              </a>
             </div>
           </div>
         </div>
