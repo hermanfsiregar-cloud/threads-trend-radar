@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threads Trend Hunter & Scraper Hub</title>
+  
+  <!-- Font Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Material Design Icons (MDI) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    /* 3 Warna Harmonis:
+       1. Primer:    #4F46E5 (Indigo 600)  - Brand utama, kartu terpilih, tombol aksi
+       2. Sekunder:  #475569 (Slate 600)   - Deskripsi, border, container background
+       3. Aksen:     #F59E0B (Amber 500)   - Highlight reach, growth, indikator status
+    */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#0F172A] antialiased min-h-screen p-4 md:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-[#4F46E5] text-white flex items-center justify-center shadow-md shadow-indigo-100">
+          <i class="mdi mdi-chart-timeline-variant text-2xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900">ThreadLens Market Radar</h1>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#4F46E5] font-semibold border border-indigo-100 flex items-center gap-1">
+              <i class="mdi mdi-checkbox-marked-circle-outline text-xs"></i> Live Intelligence
+            </span>
+          </div>
+          <p class="text-xs text-[#475569] mt-0.5">Pantau topik terpanas di Threads, scrape tagging kustom, atau analisa data reach tertinggi secara real-time</p>
+        </div>
+      </div>
+
+      <!-- Action Utilities -->
+      <div class="flex items-center gap-2.5">
+        <button onclick="exportData('csv')" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-[#475569] flex items-center gap-1.5 transition shadow-sm">
+          <i class="mdi mdi-file-delimited-outline text-base text-emerald-600"></i>
+          Export CSV
+        </button>
+        <button onclick="exportData('json')" class="px-4 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-indigo-200">
+          <i class="mdi mdi-code-json text-base"></i>
+          Export JSON
+        </button>
+      </div>
+    </header>
+
+    <!-- Section 1: Input Scraping Mandiri (Custom Tagging) -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="mdi mdi-magnify-plus-outline text-[#4F46E5] text-lg"></i>
+            Scrape Tagging Baru
+          </h2>
+          <p class="text-xs text-[#475569]">Tag yang Anda buat akan masuk ke <strong>Saved Library</strong>. Jika reach-nya mengalahkan topik lain, tag ini otomatis menembus <strong>Top Leaderboard</strong>!</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-[#475569]">
+          <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-700">Total Tracked: <strong id="totalTagsCount" class="text-[#4F46E5]">25</strong> Topik</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <!-- Tagging Input -->
+        <div class="md:col-span-5 relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="mdi mdi-pound text-lg text-[#4F46E5]"></i>
+          </div>
+          <input 
+            type="text" 
+            id="customTagInput" 
+            placeholder="Ketik topik baru (misal: kopi susu, lowongan kerja, diet sehat)..." 
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition"
+            onkeypress="if(event.key==='Enter') addCustomTag()"
+          />
+        </div>
+
+        <!-- Country Filter -->
+        <div class="md:col-span-3 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <i class="mdi mdi-earth text-lg text-[#475569]"></i>
+          </div>
+          <select id="countrySelect" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+            <option value="ID" selected>🇮🇩 Indonesia (ID)</option>
+            <option value="GLOBAL">🌐 Global (Semua Wilayah)</option>
+            <option value="MY">🇲🇾 Malaysia (MY)</option>
+            <option value="SG">🇸🇬 Singapore (SG)</option>
+            <option value="US">🇺🇸 United States (US)</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+            <i class="mdi mdi-chevron-down text-base"></i>
+          </div>
+        </div>
+
+        <!-- Metric Priority -->
+        <div class="md:col-span-2 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <i class="mdi mdi-tune-vertical text-lg text-[#475569]"></i>
+          </div>
+          <select id="scrapeSortSelect" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+            <option value="reach" selected>🔥 Max Reach</option>
+            <option value="replies">💬 By Replies</option>
+            <option value="newest">🕒 Terbaru Hari Ini</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+            <i class="mdi mdi-chevron-down text-base"></i>
+          </div>
+        </div>
+
+        <!-- Button -->
+        <div class="md:col-span-2">
+          <button onclick="addCustomTag()" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-sm shadow-indigo-100">
+            <i class="mdi mdi-cloud-search-outline text-lg"></i>
+            Mulai Scrap
+          </button>
+        </div>
+      </div>
+
+      <!-- Tag History / Saved Tag Library -->
+      <div class="pt-2 flex flex-wrap items-center gap-2">
+        <span class="text-xs text-[#475569] font-medium flex items-center gap-1">
+          <i class="mdi mdi-bookmark-multiple-outline text-sm"></i> Saved Library Saya:
+        </span>
+        <div id="activeTagsContainer" class="flex flex-wrap gap-1.5">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Summary Leaderboard Tagging Threads -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-[#F59E0B] flex items-center justify-center font-bold">
+              <i class="mdi mdi-trending-up text-lg"></i>
+            </div>
+            <h2 class="text-base font-bold text-slate-900">Summary Trending Tagging Threads</h2>
+          </div>
+          <p class="text-xs text-[#475569] mt-0.5">
+            Default diurutkan berdasarkan <strong><span id="currentSortLabel">Total Est. Reach Tertinggi</span></strong> per hari ini
+          </p>
+        </div>
+        
+        <!-- Controls: View Limit (20, 50, All) & Sort Criteria -->
+        <div class="flex flex-wrap items-center gap-3">
+          
+          <!-- Limit Selector (Bisa lebih dari 20!) -->
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-medium">
+            <span class="text-[#475569] px-2 text-[11px]">Tampilkan:</span>
+            <button onclick="setViewLimit(20)" id="btnLimit20" class="px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition">Top 20</button>
+            <button onclick="setViewLimit(50)" id="btnLimit50" class="px-2.5 py-1 rounded-lg text-[#475569] hover:text-slate-900 transition">Top 50</button>
+            <button onclick="setViewLimit('all')" id="btnLimitAll" class="px-2.5 py-1 rounded-lg text-[#475569] hover:text-slate-900 transition">Semua</button>
+          </div>
+
+          <!-- Sort Criteria -->
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
+            <button onclick="sortTags('reach')" id="btnSortTagReach" class="px-3 py-1.5 rounded-lg font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1">
+              <i class="mdi mdi-fire text-sm text-[#F59E0B]"></i> Reach
+            </button>
+            <button onclick="sortTags('comments')" id="btnSortTagComments" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
+              <i class="mdi mdi-comment-multiple-outline text-sm"></i> Komentar
+            </button>
+            <button onclick="sortTags('posts')" id="btnSortTagPosts" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
+              <i class="mdi mdi-post-outline text-sm"></i> Jml Post
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Grid Leaderboard Tags -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="top20TagsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Section 3: Detail Hasil Scraping Postingan Threads -->
+    <div class="space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="mdi mdi-card-text-outline text-[#4F46E5] text-xl"></i>
+            Daftar Postingan Terfilter: <span id="currentFilterTagTitle" class="text-[#4F46E5] font-mono">#coffee</span>
+          </h2>
+          <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan interaksi dan jangkauan tertinggi</p>
+        </div>
+
+        <!-- Filter & Sorting Bar for Posts -->
+        <div class="flex items-center gap-2.5">
+          <div class="relative">
+            <select id="postSortFilter" onchange="renderPosts()" class="pl-8 pr-7 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] appearance-none shadow-sm">
+              <option value="reach" selected>🔥 Tertinggi Est. Reach</option>
+              <option value="replies">💬 Tertinggi Komentar (Replies)</option>
+              <option value="likes">❤️ Tertinggi Likes</option>
+              <option value="newest">🕒 Terbaru Hari Ini</option>
+            </select>
+            <i class="mdi mdi-sort absolute left-2.5 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
+            <i class="mdi mdi-chevron-down absolute right-2 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
+          </div>
+
+          <span class="text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 text-[#475569] font-medium shadow-sm flex items-center gap-1" id="postCountBadge">
+            <i class="mdi mdi-database text-xs text-[#4F46E5]"></i> 0 Postingan
+          </span>
+        </div>
+      </div>
+
+      <!-- Post Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="postsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. Master Dataset Tags (Mendukung lebih dari 20!)
+    let allTags = [
+      { tag: "coffee", label: "coffee", icon: "mdi-coffee", totalPosts: 1240, totalReach: 1450000, totalComments: 48200, growth: "+34%" },
+      { tag: "skincare", label: "skincare", icon: "mdi-sparkles", totalPosts: 980, totalReach: 1290000, totalComments: 56100, growth: "+28%" },
+      { tag: "kuliner", label: "kuliner", icon: "mdi-noodles", totalPosts: 1120, totalReach: 980000, totalComments: 39500, growth: "+19%" },
+      { tag: "startup", label: "startup", icon: "mdi-rocket-launch-outline", totalPosts: 640, totalReach: 870000, totalComments: 31200, growth: "+12%" },
+      { tag: "karir", label: "karir", icon: "mdi-briefcase-outline", totalPosts: 830, totalReach: 820000, totalComments: 42100, growth: "+22%" },
+      { tag: "finansial", label: "finansial", icon: "mdi-cash-multiple", totalPosts: 590, totalReach: 790000, totalComments: 28900, growth: "+15%" },
+      { tag: "gadget", label: "gadget", icon: "mdi-cellphone", totalPosts: 710, totalReach: 750000, totalComments: 24300, growth: "+9%" },
+      { tag: "kpop", label: "kpop", icon: "mdi-music-note", totalPosts: 1450, totalReach: 710000, totalComments: 68400, growth: "+45%" },
+      { tag: "properti", label: "properti", icon: "mdi-home-city-outline", totalPosts: 420, totalReach: 680000, totalComments: 18700, growth: "+8%" },
+      { tag: "otomotif", label: "otomotif", icon: "mdi-car-sports", totalPosts: 510, totalReach: 640000, totalComments: 19500, growth: "+11%" },
+      { tag: "film", label: "film", icon: "mdi-movie-open-outline", totalPosts: 890, totalReach: 610000, totalComments: 32000, growth: "+17%" },
+      { tag: "travel", label: "travel", icon: "mdi-airplane", totalPosts: 730, totalReach: 580000, totalComments: 21400, growth: "+14%" },
+      { tag: "fitness", label: "fitness", icon: "mdi-dumbbell", totalPosts: 490, totalReach: 520000, totalComments: 16800, growth: "+10%" },
+      { tag: "parenting", label: "parenting", icon: "mdi-baby-face-outline", totalPosts: 380, totalReach: 490000, totalComments: 22100, growth: "+21%" },
+      { tag: "ai", label: "ai", icon: "mdi-robot-outline", totalPosts: 620, totalReach: 460000, totalComments: 15900, growth: "+31%" },
+      { tag: "crypto", label: "crypto", icon: "mdi-bitcoin", totalPosts: 540, totalReach: 430000, totalComments: 14200, growth: "+5%" },
+      { tag: "buku", label: "buku", icon: "mdi-book-open-page-variant-outline", totalPosts: 310, totalReach: 390000, totalComments: 11400, growth: "+13%" },
+      { tag: "fashion", label: "fashion", icon: "mdi-tshirt-crew-outline", totalPosts: 680, totalReach: 370000, totalComments: 13900, growth: "+18%" },
+      { tag: "freelance", label: "freelance", icon: "mdi-laptop", totalPosts: 410, totalReach: 340000, totalComments: 17600, growth: "+26%" },
+      { tag: "gaming", label: "gaming", icon: "mdi-gamepad-variant-outline", totalPosts: 820, totalReach: 310000, totalComments: 19800, growth: "+7%" },
+      // Tag ke 21 - 25 (Bukti bisa lebih dari 20!)
+      { tag: "resep", label: "resep", icon: "mdi-chef-hat", totalPosts: 410, totalReach: 285000, totalComments: 16400, growth: "+12%" },
+      { tag: "psikologi", label: "psikologi", icon: "mdi-brain", totalPosts: 290, totalReach: 240000, totalComments: 12200, growth: "+19%" },
+      { tag: "investasi", label: "investasi", icon: "mdi-chart-line", totalPosts: 350, totalReach: 210000, totalComments: 10100, growth: "+8%" },
+      { tag: "musik", label: "musik", icon: "mdi-headphones", totalPosts: 510, totalReach: 180000, totalComments: 9400, growth: "+4%" },
+      { tag: "fotografi", label: "fotografi", icon: "mdi-camera", totalPosts: 270, totalReach: 150000, totalComments: 7800, growth: "+6%" }
+    ];
+
+    let currentSortCriteria = 'reach'; // Default sorting: Total Reach
+    let currentLimit = 20; // Default: Top 20
+    let activeTag = "coffee";
+    let customTagsList = ["#coffee", "#skincare", "#kuliner", "#startup", "#finansial"];
+
+    // 2. Data Postingan Scraping Simulasi
+    let rawPosts = [
+      {
+        id: "post_101",
+        tag: "coffee",
+        author: "barista_senja",
+        handle: "@barista_senja",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+        country: "ID",
+        content: "Banyak yg nanya kenapa kopi di coffeeshop rasanya beda jauh sama bikin sendiri di rumah padahal beansnya sama. Kuncinya ada di rasio air & suhu seduh! Ini rumus kalibrasi simpelnya ☕👇",
+        hoursAgo: 2,
+        metrics: { reach: 142000, replies: 1240, likes: 6800, reposts: 920 }
+      },
+      {
+        id: "post_102",
+        tag: "coffee",
+        author: "jaksel_foodguide",
+        handle: "@jaksel_foodguide",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+        country: "ID",
+        content: "Spill coffeeshop di Jaksel yang colokannya banyak, wifi kenceng minimal 80mbps, dan kursinya bukan semen dingin. Butuh banget buat seharian WFC besok!",
+        hoursAgo: 4,
+        metrics: { reach: 98000, replies: 950, likes: 4100, reposts: 310 }
+      },
+      {
+        id: "post_103",
+        tag: "coffee",
+        author: "roaster_gayo",
+        handle: "@roaster_gayo",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
+        country: "ID",
+        content: "Musim panen kopi Gayo tahun ini kualitasnya gila banget. Proses anaerobic natural keluar rasa strawberry jam dan winey tebel tanpa off-flavor. Stok cuma 50kg buat roastery lokal.",
+        hoursAgo: 6,
+        metrics: { reach: 64000, replies: 480, likes: 2900, reposts: 190 }
+      },
+      {
+        id: "post_104",
+        tag: "skincare",
+        author: "dr_dermatology",
+        handle: "@dr_dermatology",
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
+        country: "ID",
+        content: "Tolong ya, jangan asal layer serum retinol barengan eksfoliasi AHA BHA di malam yang sama kalau kulit kalian lagi kemerahan. Barrier jebol sembuhinnya butuh 3 bulan!",
+        hoursAgo: 3,
+        metrics: { reach: 215000, replies: 2890, likes: 11400, reposts: 3400 }
+      },
+      {
+        id: "post_105",
+        tag: "startup",
+        author: "founder_curhat",
+        handle: "@founder_curhat",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
+        country: "ID",
+        content: "Pelajaran paling mahal bangun startup 3 tahun ini: Jangan rekrut orang cuma karena CV-nya ex-unicorn. Rekrut yang punya grit dan mau hands-on benerin masalah dari nol.",
+        hoursAgo: 5,
+        metrics: { reach: 112000, replies: 890, likes: 5200, reposts: 740 }
+      },
+      {
+        id: "post_106",
+        tag: "kuliner",
+        author: "makan_enak_id",
+        handle: "@makan_enak_id",
+        avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&auto=format&fit=crop&q=80",
+        country: "ID",
+        content: "Nemu warung mie ayam tersembunyi di gang sempit Bandung tapi antreannya tembus 1 jam. Kuah kental kaldu ayam kampung asli, topping pangsit rebusnya juicy parah!",
+        hoursAgo: 1,
+        metrics: { reach: 178000, replies: 1420, likes: 8900, reposts: 1200 }
+      }
+    ];
+
+    // Fungsi Render Leaderboard Tags
+    function renderTopTags() {
+      const container = document.getElementById("top20TagsGrid");
+      document.getElementById("totalTagsCount").textContent = allTags.length;
+
+      // 1. Sort all tags
+      allTags.sort((a,b) => {
+        if (currentSortCriteria === 'reach') return b.totalReach - a.totalReach;
+        if (currentSortCriteria === 'comments') return b.totalComments - a.totalComments;
+        if (currentSortCriteria === 'posts') return b.totalPosts - a.totalPosts;
+        return 0;
+      });
+
+      // 2. Slice based on view limit
+      let displayedTags = (currentLimit === 'all') ? allTags : allTags.slice(0, currentLimit);
+
+      container.innerHTML = displayedTags.map((t, idx) => {
+        const rank = idx + 1;
+        const isSelected = activeTag === t.tag;
+        return `
+          <div 
+            onclick="selectTag('${t.tag}')"
+            class="p-3.5 rounded-2xl border cursor-pointer transition text-left flex flex-col justify-between ${
+              isSelected 
+                ? 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-lg shadow-indigo-100' 
+                : 'bg-white border-slate-200 hover:border-[#4F46E5] text-slate-900 hover:shadow-sm'
+            }"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}">
+                #${rank}
+              </span>
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                isSelected 
+                  ? 'bg-white/20 text-white' 
+                  : 'bg-amber-50 text-[#D97706] border border-amber-200/60'
+              }">
+                ${t.growth}
+              </span>
+            </div>
+            
+            <div class="my-2.5">
+              <div class="text-xs font-bold flex items-center gap-1.5 truncate">
+                <i class="mdi ${t.icon} text-base ${isSelected ? 'text-amber-300' : 'text-[#4F46E5]'}"></i>
+                #${t.label}
+              </div>
+              <div class="text-[11px] mt-0.5 ${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">${t.totalPosts.toLocaleString()} posts</div>
+            </div>
+
+            <div class="border-t ${isSelected ? 'border-indigo-400/30' : 'border-slate-100'} pt-2 text-[11px] flex justify-between font-mono">
+              <span class="${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">Reach:</span>
+              <span class="font-bold ${isSelected ? 'text-white' : 'text-[#F59E0B]'}">${(t.totalReach / 1000).toFixed(0)}k</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Set View Limit (20, 50, all)
+    function setViewLimit(limit) {
+      currentLimit = limit;
+      document.querySelectorAll('#btnLimit20, #btnLimit50, #btnLimitAll').forEach(b => {
+        b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:text-slate-900 transition";
+      });
+
+      if (limit === 20) document.getElementById('btnLimit20').className = "px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition";
+      if (limit === 50) document.getElementById('btnLimit50').className = "px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition";
+      if (limit === 'all') document.getElementById('btnLimitAll').className = "px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-900 shadow-sm transition";
+
+      renderTopTags();
+    }
+
+    // Sort Tagging Summary
+    function sortTags(criteria) {
+      currentSortCriteria = criteria;
+      document.querySelectorAll('#btnSortTagReach, #btnSortTagPosts, #btnSortTagComments').forEach(b => {
+        b.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1";
+      });
+
+      const label = document.getElementById('currentSortLabel');
+      if (criteria === 'reach') {
+        document.getElementById('btnSortTagReach').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
+        label.textContent = "Total Est. Reach Tertinggi";
+      } else if (criteria === 'comments') {
+        document.getElementById('btnSortTagComments').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
+        label.textContent = "Total Komentar (Replies) Terbanyak";
+      } else if (criteria === 'posts') {
+        document.getElementById('btnSortTagPosts').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
+        label.textContent = "Jumlah Postingan Terbanyak";
+      }
+
+      renderTopTags();
+    }
+
+    function selectTag(tag) {
+      activeTag = tag;
+      document.getElementById("currentFilterTagTitle").textContent = "#" + tag;
+      renderTopTags();
+      renderPosts();
+    }
+
+    // Saved Library Rendering
+    function renderCustomTags() {
+      const container = document.getElementById("activeTagsContainer");
+      container.innerHTML = customTagsList.map(tag => `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-xs text-slate-800 border border-slate-200">
+          <i class="mdi mdi-pound text-xs text-[#4F46E5]"></i>
+          <span class="cursor-pointer font-medium hover:text-[#4F46E5]" onclick="selectTag('${tag.replace('#','')}')">${tag.replace('#','')}</span>
+          <button onclick="removeTag('${tag}')" class="text-slate-400 hover:text-rose-500 font-bold ml-0.5" title="Hapus dari library">
+            <i class="mdi mdi-close-circle text-xs"></i>
+          </button>
+        </span>
+      `).join("");
+    }
+
+    function addCustomTag() {
+      const input = document.getElementById("customTagInput");
+      let val = input.value.trim();
+      if (!val) return;
+      if (!val.startsWith("#")) val = "#" + val;
+
+      const cleanTag = val.replace("#", "").toLowerCase();
+
+      // Tambah ke Saved Library (TIDAK ADA YANG TERDELETE)
+      if (!customTagsList.includes(val)) {
+        customTagsList.unshift(val);
+        renderCustomTags();
+      }
+
+      // Tambah ke Master Dataset jika belum ada
+      let existingTag = allTags.find(t => t.tag === cleanTag);
+      if (!existingTag) {
+        // Simulasi reach untuk topik baru (misal hasil scrape dapet reach 520k)
+        const simReach = Math.floor(Math.random() * 600000) + 200000;
+        allTags.push({
+          tag: cleanTag,
+          label: cleanTag,
+          icon: "mdi-tag-outline",
+          totalPosts: Math.floor(Math.random() * 500) + 100,
+          totalReach: simReach,
+          totalComments: Math.floor(Math.random() * 20000) + 5000,
+          growth: "+New"
+        });
+      }
+
+      // Generate dummy posts
+      rawPosts.unshift({
+        id: "post_" + Math.floor(Math.random()*9000 + 1000),
+        tag: cleanTag,
+        author: "threads_user_id",
+        handle: "@" + cleanTag + "_community",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
+        country: document.getElementById("countrySelect").value,
+        content: `Hasil scraping langsung topik ${val}: Diskusi sedang naik daun hari ini dengan total respon tinggi di Threads Indonesia!`,
+        hoursAgo: 1,
+        metrics: { reach: 95000, replies: 840, likes: 4100, reposts: 390 }
+      });
+
+      input.value = "";
+      selectTag(cleanTag);
+    }
+
+    function removeTag(tag) {
+      customTagsList = customTagsList.filter(t => t !== tag);
+      renderCustomTags();
+    }
+
+    // Render Posts
+    function renderPosts() {
+      const sortBy = document.getElementById("postSortFilter").value;
+      const grid = document.getElementById("postsGrid");
+      const badge = document.getElementById("postCountBadge");
+
+      let posts = rawPosts.filter(p => p.tag === activeTag);
+
+      posts.sort((a,b) => {
+        if (sortBy === "reach") return b.metrics.reach - a.metrics.reach;
+        if (sortBy === "replies") return b.metrics.replies - a.metrics.replies;
+        if (sortBy === "likes") return b.metrics.likes - a.metrics.likes;
+        if (sortBy === "newest") return a.hoursAgo - b.hoursAgo;
+        return 0;
+      });
+
+      badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> ${posts.length} Postingan`;
+
+      if (posts.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-14 border border-slate-200 rounded-2xl bg-white shadow-sm">
+            <i class="mdi mdi-text-box-search-outline text-4xl text-slate-300 mb-2 block"></i>
+            <p class="text-sm font-semibold text-slate-800">Belum ada postingan tersimpan untuk tag #${activeTag}</p>
+            <p class="text-xs text-[#475569] mt-1">Ketik di form "Scrape Tagging Baru" di atas untuk menarik data topik ini secara instan.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = posts.map((p, idx) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#4F46E5] hover:shadow-md transition flex flex-col justify-between group">
+          <div>
+            <!-- Card Header -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-center gap-3">
+                <img src="${p.avatar}" alt="${p.author}" class="w-10 h-10 rounded-full object-cover border border-slate-200" />
+                <div>
+                  <div class="text-xs font-bold text-slate-900">${p.author}</div>
+                  <div class="text-[11px] text-[#475569] flex items-center gap-1">
+                    <span>${p.handle}</span>
+                    <span>•</span>
+                    <span class="font-mono text-slate-500">${p.country}</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                idx === 0 
+                  ? 'bg-amber-50 text-[#D97706] border border-amber-200 font-semibold' 
+                  : 'bg-slate-100 text-[#475569]'
+              }">
+                #${idx + 1}
+              </span>
+            </div>
+
+            <!-- Content -->
+            <p class="text-xs md:text-sm text-slate-800 leading-relaxed mb-4">
+              ${p.content}
+            </p>
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="border-t border-slate-100 pt-3.5 space-y-3">
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-[#475569] block flex items-center justify-center gap-0.5">
+                  <i class="mdi mdi-comment-text-outline text-xs text-sky-500"></i> Komentar
+                </span>
+                <span class="text-xs font-extrabold text-sky-600 mt-0.5 block">${p.metrics.replies.toLocaleString()}</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-[#475569] block flex items-center justify-center gap-0.5">
+                  <i class="mdi mdi-heart-outline text-xs text-rose-500"></i> Likes
+                </span>
+                <span class="text-xs font-extrabold text-rose-600 mt-0.5 block">${p.metrics.likes.toLocaleString()}</span>
+              </div>
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <span class="text-[11px] text-[#475569] block flex items-center justify-center gap-0.5">
+                  <i class="mdi mdi-fire text-xs text-[#F59E0B]"></i> Est. Reach
+                </span>
+                <span class="text-xs font-extrabold text-[#D97706] mt-0.5 block">${(p.metrics.reach / 1000).toFixed(0)}k</span>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="flex items-center justify-between text-[11px] text-[#475569] pt-1">
+              <span class="flex items-center gap-1">
+                <i class="mdi mdi-clock-outline text-xs"></i> ${p.hoursAgo} jam lalu
+              </span>
+              <a href="https://threads.net" target="_blank" class="text-[#4F46E5] hover:text-[#4338CA] font-medium flex items-center gap-0.5 transition">
+                Buka di Threads <i class="mdi mdi-arrow-top-right text-xs"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Export Data
+    function exportData(type) {
+      const postsToExport = rawPosts.filter(p => p.tag === activeTag);
+      const dataStr = type === 'json' 
+        ? "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(postsToExport, null, 2))
+        : "data:text/csv;charset=utf-8," + encodeURIComponent("ID,Tag,Author,Country,Reach,Replies,Likes,Content\n" + postsToExport.map(p => `"${p.id}","${p.tag}","${p.author}","${p.country}",${p.metrics.reach},${p.metrics.replies},${p.metrics.likes},"${p.content.replace(/"/g, '""')}"`).join("\n"));
+      
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `threads_scraped_${activeTag}.${type}`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // Init
+    renderTopTags();
+    renderCustomTags();
+    renderPosts();
+  </script>
+</body>
+</html>
