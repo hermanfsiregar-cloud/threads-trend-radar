@@ -16,6 +16,7 @@ class ThreadMetrics(BaseModel):
     replies: int = Field(default=0, description="Total replies / comments")
     likes: int = Field(default=0, description="Total likes")
     reposts: int = Field(default=0, description="Total reposts")
+    shares: int = Field(default=0, description="Total shares / sends")
 
 class ThreadPost(BaseModel):
     id: str

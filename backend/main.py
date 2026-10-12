@@ -150,9 +150,16 @@ async def get_posts(
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
 
+    exact_matched = any(p.posted_date == target_date for p in posts) if target_date else True
+    filter_note = ""
+    if target_date and not exact_matched:
+        filter_note = f"Tidak ada postingan pada tanggal {target_date}. Menampilkan postingan terbaru yang tersedia untuk #{clean_tag}:"
+
     return {
         "tag": clean_tag,
-        "target_date": target_date or str(date.today()),
+        "target_date": target_date or "",
+        "exact_date_matched": exact_matched,
+        "filter_note": filter_note,
         "items": posts[start_idx:end_idx],
         "pagination": {
             "page": page,

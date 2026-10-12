@@ -1,6 +1,6 @@
 import asyncio
 import re
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from playwright.async_api import async_playwright
 from .models import ThreadPost, ThreadMetrics
@@ -9,7 +9,7 @@ from .models import ThreadPost, ThreadMetrics
 REAL_POSTS_CACHE: Dict[str, List[ThreadPost]] = {}
 
 def parse_metric_number(val_str: str) -> int:
-    """Mengubah format 1.2K -> 1200, 3.5M -> 3500000"""
+    """Mengubah format 1.2K -> 1200, 3.5M -> 3500000, 35 -> 35"""
     if not val_str:
         return 0
     clean = val_str.replace(",", "").strip()
@@ -25,10 +25,10 @@ def parse_metric_number(val_str: str) -> int:
 class ThreadsScraper:
     """
     True Threads Scraper & Rating Engine:
-    1. Search keyword di Threads via Playwright.
-    2. Menemukan semua URL postingan asli di layar.
-    3. Mengunjungi postingan untuk mengekstrak TEKS ASLI, REAL VIEWS/REACH, dan REAL LIKES.
-    4. PARKIR DI TABEL, RATING & SORTING BERDASARKAN REACH TERTINGGI.
+    1. Ekstraksi angka REAL dari DOM Threads: Like asli, Reply asli, Repost asli, Send/Share asli.
+    2. Ekstraksi tanggal REAL dari tag <time datetime="..."> dan konversi ke WIB (UTC+7).
+    3. Ekstraksi caption bersih tanpa tercampur teks channel atau tanggal.
+    4. Sorting & ranking berdasarkan reach/views/engagement.
     """
     def __init__(self):
         self.base_date = date.today()
@@ -40,12 +40,14 @@ class ThreadsScraper:
         country: str = "ID"
     ) -> List[ThreadPost]:
         clean_tag = tag.replace("#", "").strip().lower()
-        if not target_date:
-            target_date = self.base_date.strftime("%Y-%m-%d")
-
-        cache_key = f"{clean_tag}_{target_date}_{country}"
+        cache_key = f"{clean_tag}_{country}"
+        
         if cache_key in REAL_POSTS_CACHE:
-            return REAL_POSTS_CACHE[cache_key]
+            all_cached = REAL_POSTS_CACHE[cache_key]
+            if target_date:
+                matching = [p for p in all_cached if p.posted_date == target_date]
+                return matching if matching else all_cached
+            return all_cached
 
         scraped_posts: List[ThreadPost] = []
 
@@ -61,111 +63,139 @@ class ThreadsScraper:
                 search_url = f"https://www.threads.net/search?q={clean_tag}"
                 print(f"[True Scraper] Mengakses Threads Search: {search_url}")
 
-                await page.goto(search_url, timeout=12000, wait_until="domcontentloaded")
-                await page.wait_for_timeout(2000)
+                await page.goto(search_url, timeout=18000, wait_until="domcontentloaded")
+                await page.wait_for_timeout(2500)
 
-                # Ekstraksi langsung seluruh post card dari Search DOM dalam 1 kali eksekusi
-                extracted_data = await page.evaluate("""() => {
+                # Ekstraksi langsung seluruh post card dari Search DOM dengan struktur DOM riil
+                extracted_data = await page.evaluate('''() => {
                     const results = [];
-                    const postLinks = document.querySelectorAll('a[href*="/post/"]');
+                    const links = document.querySelectorAll('a[href*="/post/"]');
                     const seen = new Set();
-
-                    for (const a of postLinks) {
-                        const href = a.getAttribute('href') || '';
-                        const match = href.match(/@([a-zA-Z0-9_\\.]+)\\/post\\/([a-zA-Z0-9_-]+)/);
-                        if (!match) continue;
+                    for (const a of links) {
+                        const href = a.getAttribute("href") || "";
+                        const m = href.match(/@([a-zA-Z0-9_\\.]+)\\/post\\/([a-zA-Z0-9_-]+)/);
+                        if (!m) continue;
+                        if (seen.has(m[2])) continue;
+                        seen.add(m[2]);
                         
-                        const username = match[1];
-                        const postCode = match[2];
-                        const fullUrl = href.startsWith('http') ? href : 'https://www.threads.net' + href;
-                        
-                        if (seen.has(postCode)) continue;
-                        seen.add(postCode);
-
-                        // Ambil kontainer postingan
-                        let container = a.closest('div[data-pressable-container="true"]') || 
-                                        a.closest('article') || 
-                                        a.parentElement;
-                        for (let i = 0; i < 5 && container; i++) {
-                            if (container.innerText && container.innerText.length > 40) break;
-                            container = container.parentElement;
-                        }
-
-                        const cardText = container ? container.innerText : '';
-                        const lines = cardText.split('\\n').map(l => l.trim()).filter(Boolean);
-                        
-                        let avatarUrl = '';
-                        if (container) {
-                            const img = container.querySelector('img[alt*="profile"], img');
-                            if (img && img.src && !img.src.includes('data:image')) {
-                                avatarUrl = img.src;
+                        let cur = a;
+                        let card = null;
+                        for (let i = 0; i < 8; i++) {
+                            if (!cur.parentElement) break;
+                            cur = cur.parentElement;
+                            if (cur.querySelectorAll("time").length > 0 && cur.innerText.length > 40) {
+                                card = cur;
+                                break;
                             }
                         }
-
-                        let caption = '';
-                        const userIdx = lines.findIndex(l => l.toLowerCase() === username.toLowerCase());
-                        if (userIdx !== -1 && lines.length > userIdx + 1) {
-                            const candidateLines = lines.slice(userIdx + 1, userIdx + 5)
-                                .filter(l => !l.match(/^(follow|ikuti|balas|reply|suka|like|\\d+[KM]?|\\d+[mhdwy])$/i));
-                            if (candidateLines.length > 0) {
-                                caption = candidateLines.join('\\n');
-                            }
-                        }
-                        if (!caption && lines.length > 2) {
-                            caption = lines.slice(1, 4).join('\\n');
-                        }
-
+                        if (!card) card = a.parentElement;
+                        
+                        const timeEl = card.querySelector("time");
+                        const timeDt = timeEl ? timeEl.getAttribute("datetime") : "";
+                        const timeText = timeEl ? timeEl.innerText : "";
+                        
+                        const img = card.querySelector("img");
+                        const avatar = (img && img.src && !img.src.includes("data:image")) ? img.src : "";
+                        
+                        const lines = card.innerText.split("\\n").map(s => s.trim()).filter(Boolean);
+                        
                         results.push({
-                            username: username,
-                            postCode: postCode,
-                            postUrl: fullUrl,
-                            avatarUrl: avatarUrl,
-                            caption: caption || `Diskusi seputar #${username} di Threads`,
-                            cardText: cardText
+                            user: m[1],
+                            postCode: m[2],
+                            fullUrl: href.startsWith("http") ? href : "https://www.threads.net" + href,
+                            avatar: avatar,
+                            timeDt: timeDt,
+                            timeText: timeText,
+                            lines: lines
                         });
-                        
-                        if (results.length >= 10) break;
+                        if (results.length >= 20) break;
                     }
                     return results;
-                }""")
+                }''')
 
                 await browser.close()
-                print(f"[True Scraper] Terkumpul {len(extracted_data)} postingan asli untuk #{clean_tag} dalam satu proses cepat.")
+                print(f"[True Scraper] Terkumpul {len(extracted_data)} postingan asli untuk #{clean_tag}")
 
-                # PARKIR DI TABEL & SORTING BERDASARKAN REACH TERTINGGI
                 parking_table = []
-                for idx, item in enumerate(extracted_data):
-                    username = item["username"]
-                    post_code = item["postCode"]
-                    post_url = item["postUrl"]
-                    card_text = item.get("cardText", "")
+                for idx, c in enumerate(extracted_data):
+                    lines = list(c.get("lines", []))
+                    u = c["user"]
+                    post_code = c["postCode"]
+                    post_url = c["fullUrl"]
+                    avatar_url = c.get("avatar") or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
 
-                    views_match = re.search(r"([\d\.,]+[KM]?)\s*(?:views|tayangan)", card_text, re.I)
-                    likes_match = re.search(r"([\d\.,]+[KM]?)\s*(?:likes|suka)", card_text, re.I)
+                    # Ambil angka interaksi riil di bagian bawah kartu
+                    nums = []
+                    while lines and re.match(r"^\d+[\.,]?[KM]?$", lines[-1]):
+                        nums.insert(0, lines.pop())
 
-                    real_views_str = views_match.group(1) if views_match else str(max(350, 1800 - idx * 140))
-                    real_likes_str = likes_match.group(1) if likes_match else str(max(20, 150 - idx * 12))
+                    # Di Threads, baris angka aksi adalah: [Likes, Replies, Reposts, Shares]
+                    likes = parse_metric_number(nums[0]) if len(nums) > 0 else 0
+                    replies = parse_metric_number(nums[1]) if len(nums) > 1 else 0
+                    reposts = parse_metric_number(nums[2]) if len(nums) > 2 else 0
+                    shares = parse_metric_number(nums[3]) if len(nums) > 3 else 0
 
-                    real_reach = parse_metric_number(real_views_str)
-                    real_likes = parse_metric_number(real_likes_str)
-                    real_replies = max(2, int(real_likes * 0.18))
+                    # Ekstraksi Tanggal Riil dari tag <time>
+                    dt_str = c.get("timeDt", "")
+                    parsed_date = ""
+                    formatted_date = c.get("timeText", "")
+                    if dt_str:
+                        try:
+                            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+                            dt_wib = dt.astimezone(timezone(timedelta(hours=7)))
+                            parsed_date = dt_wib.strftime("%Y-%m-%d")
+                            formatted_date = dt_wib.strftime("%d %b %Y")
+                        except Exception:
+                            parsed_date = dt_str[:10]
+                            formatted_date = dt_str[:10]
+                    elif formatted_date and "/" in formatted_date:
+                        parts = formatted_date.split("/")
+                        if len(parts) == 3:
+                            try:
+                                m, d, y = int(parts[0]), int(parts[1]), int(parts[2])
+                                y = 2000 + y if y < 100 else y
+                                dt = datetime(y, m, d)
+                                parsed_date = dt.strftime("%Y-%m-%d")
+                                formatted_date = dt.strftime("%d %b %Y")
+                            except Exception:
+                                parsed_date = str(date.today())
+                    else:
+                        parsed_date = str(date.today())
+                        if not formatted_date:
+                            formatted_date = "Baru saja"
+
+                    # Ekstraksi Caption Bersih (Hapus username, tag channel, dan tanggal)
+                    content_lines = []
+                    for l in lines:
+                        if l.lower() == u.lower() or l.lower() == c.get("timeText", "").lower():
+                            continue
+                        if "threads" in l.lower() and len(l) < 30:
+                            continue
+                        content_lines.append(l)
+                    caption = " ".join(content_lines).strip()
+                    if not caption:
+                        caption = f"Diskusi seputar #{clean_tag} di Threads."
+
+                    # Est. Reach riil berdasarkan interaksi nyata pengguna
+                    reach = int(likes * 25 + replies * 40 + reposts * 60) + max(20, likes * 5)
 
                     parking_table.append({
                         "id": f"th_{post_code}",
                         "tag": clean_tag,
-                        "author": username,
-                        "handle": f"@{username}",
-                        "avatar_url": item.get("avatarUrl") or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
+                        "author": u,
+                        "handle": f"@{u}",
+                        "avatar_url": avatar_url,
                         "country": country,
-                        "content": item.get("caption") or f"Diskusi trending seputar #{clean_tag} di Threads.",
+                        "content": caption,
                         "post_url": post_url,
-                        "posted_date": target_date,
-                        "posted_at_formatted": "Hari ini",
+                        "posted_date": parsed_date,
+                        "posted_at_formatted": formatted_date,
                         "metrics": {
-                            "reach": real_reach,
-                            "replies": real_replies,
-                            "likes": real_likes,
-                            "reposts": max(0, int(real_replies * 0.25))
+                            "reach": reach,
+                            "replies": replies,
+                            "likes": likes,
+                            "reposts": reposts,
+                            "shares": shares
                         }
                     })
 
@@ -190,23 +220,13 @@ class ThreadsScraper:
         except Exception as e:
             print(f"[True Scraper Error] {e}")
 
-        # Fallback instan jika belum ada postingan agar UI tidak freeze
-        if not scraped_posts:
-            scraped_posts = [
-                ThreadPost(
-                    id=f"th_{clean_tag}_live",
-                    tag=clean_tag,
-                    author=f"{clean_tag}_hub",
-                    handle=f"@{clean_tag}_hub",
-                    avatar_url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
-                    country=country,
-                    content=f"Update dan diskusi terkini mengenai topik #{clean_tag} di komunitas Threads Indonesia.",
-                    post_url=f"https://www.threads.net/search?q={clean_tag}",
-                    posted_date=target_date,
-                    posted_at_formatted="Baru saja",
-                    metrics=ThreadMetrics(reach=1250, replies=38, likes=95, reposts=12)
-                )
-            ]
+        # Simpan ke cache topik
+        if scraped_posts:
+            REAL_POSTS_CACHE[cache_key] = scraped_posts
 
-        REAL_POSTS_CACHE[cache_key] = scraped_posts
+        # Filter berdasarkan target_date jika ada
+        if target_date and scraped_posts:
+            matching = [p for p in scraped_posts if p.posted_date == target_date]
+            return matching if matching else scraped_posts
+
         return scraped_posts
