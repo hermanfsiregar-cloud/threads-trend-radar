@@ -21,17 +21,60 @@
       font-family: 'Poppins', sans-serif;
     }
     
-    /* 3 Warna Harmonis:
-       1. Primer:    #4F46E5 (Indigo 600)  - Brand utama, tombol aksi, kartu terpilih
-       2. Sekunder:  #475569 (Slate 600)   - Deskripsi, border, container background
-       3. Aksen:     #F59E0B (Amber 500)   - Highlight reach, growth, indikator status
-    */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
   </style>
 </head>
 <body class="bg-[#F8FAFC] text-[#0F172A] antialiased min-h-screen p-4 md:p-8">
+
+  <!-- ================= MODAL LOGIN MASTER ================= -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in duration-200">
+      <div class="text-center space-y-1.5">
+        <div class="w-12 h-12 rounded-2xl bg-[#4F46E5] text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-100 mb-2">
+          <i class="mdi mdi-shield-account text-2xl"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">ThreadLens Access Control</h2>
+        <p class="text-xs text-[#475569]">Masuk untuk mengaktifkan izin peran Anda</p>
+      </div>
+
+      <!-- Quick Preset Buttons -->
+      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2">
+        <span class="text-[11px] font-semibold text-slate-600 block">Pilih Akun Uji Coba:</span>
+        <div class="grid grid-cols-3 gap-1.5 text-xs">
+          <button onclick="fillLoginPreset('superadmin')" class="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] font-semibold text-indigo-600 shadow-sm transition">Super Admin</button>
+          <button onclick="fillLoginPreset('admin')" class="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] font-semibold text-emerald-600 shadow-sm transition">Admin</button>
+          <button onclick="fillLoginPreset('user')" class="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] font-semibold text-slate-600 shadow-sm transition">User</button>
+        </div>
+        <p class="text-[10px] text-slate-400 text-center italic">*Semua password default: password123</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-3.5">
+        <div>
+          <label class="text-xs font-semibold text-slate-700 block mb-1">Username</label>
+          <div class="relative">
+            <i class="mdi mdi-account text-slate-400 absolute left-3.5 top-2.5 text-base"></i>
+            <input type="text" id="loginUsername" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" placeholder="superadmin / admin / user">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-700 block mb-1">Password</label>
+          <div class="relative">
+            <i class="mdi mdi-lock text-slate-400 absolute left-3.5 top-2.5 text-base"></i>
+            <input type="password" id="loginPassword" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" placeholder="••••••••">
+          </div>
+        </div>
+
+        <div id="loginError" class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200 hidden"></div>
+
+        <button type="submit" id="btnLoginSubmit" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-semibold text-sm transition shadow-lg shadow-indigo-100 flex items-center justify-center gap-1.5">
+          <span>Masuk Sistem</span> <i class="mdi mdi-arrow-right text-base"></i>
+        </button>
+      </form>
+    </div>
+  </div>
 
   <div class="max-w-7xl mx-auto space-y-6">
 
@@ -48,19 +91,33 @@
               <span class="w-2 h-2 rounded-full bg-slate-400"></span> Memeriksa Backend...
             </span>
           </div>
-          <p class="text-xs text-[#475569] mt-0.5">Analisis tren topik Threads: Filter tanggal spesifik (historis / mundur), urutan reach tertinggi, dan data riil.</p>
+          <p class="text-xs text-[#475569] mt-0.5">Analisis tren topik Threads: Real deep scraping, permalink asli, dan kontrol hak akses bertingkat.</p>
         </div>
       </div>
 
-      <!-- Action Utilities -->
-      <div class="flex items-center gap-2.5">
-        <button onclick="exportData('csv')" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-[#475569] flex items-center gap-1.5 transition shadow-sm">
+      <!-- Action Utilities & User Profile Bar -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Active User Badge -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="w-7 h-7 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center font-bold text-xs" id="userAvatarChar">
+            U
+          </div>
+          <div class="text-left">
+            <div class="text-xs font-bold text-slate-900 leading-tight" id="userNameLabel">Guest User</div>
+            <span class="text-[10px] font-semibold px-1.5 py-0.2 rounded font-mono" id="userRoleBadge">ROLE: USER</span>
+          </div>
+          <button onclick="openLoginModal()" class="ml-1 text-slate-400 hover:text-[#4F46E5]" title="Ganti Akun / Role">
+            <i class="mdi mdi-swap-horizontal text-lg"></i>
+          </button>
+        </div>
+
+        <button onclick="exportData('csv')" class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-[#475569] flex items-center gap-1.5 transition shadow-sm">
           <i class="mdi mdi-file-delimited-outline text-base text-emerald-600"></i>
-          Export CSV
+          CSV
         </button>
-        <button onclick="exportData('json')" class="px-4 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-indigo-200">
+        <button onclick="exportData('json')" class="px-4 py-2 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-indigo-200">
           <i class="mdi mdi-code-json text-base"></i>
-          Export JSON
+          JSON
         </button>
       </div>
     </header>
@@ -71,9 +128,11 @@
         <div>
           <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <i class="mdi mdi-magnify-plus-outline text-[#4F46E5] text-lg"></i>
-            Scrape Tagging Baru & Filter Tanggal
+            Pencarian & Penambahan Tagging
           </h2>
-          <p class="text-xs text-[#475569]">Default menampilkan data <strong>Hari Ini</strong>. Anda juga bisa memilih tanggal lampau untuk riset historis.</p>
+          <p class="text-xs text-[#475569]">
+            <span id="roleInstructionText">Role <strong>Admin / Super Admin</strong> dapat mendaftarkan tag baru. Role <strong>User</strong> hanya dapat mencari.</span>
+          </p>
         </div>
         <div class="flex items-center gap-2 text-xs text-[#475569]">
           <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-700">Tanggal Aktif: <strong id="activeDateBadge" class="text-[#4F46E5]">Hari Ini</strong></span>
@@ -81,7 +140,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <!-- Tagging Input -->
+        <!-- Tagging / Search Input -->
         <div class="md:col-span-4 relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             <i class="mdi mdi-pound text-lg text-[#4F46E5]"></i>
@@ -89,9 +148,9 @@
           <input 
             type="text" 
             id="customTagInput" 
-            placeholder="Ketik topik baru (misal: v60, lowongan, startup)..." 
+            placeholder="Cari atau tambah tag (misal: v60, montblanc, coffee)..." 
             class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition"
-            onkeypress="if(event.key==='Enter') handleNewScrap()"
+            onkeypress="if(event.key==='Enter') handleActionTrigger()"
           />
         </div>
 
@@ -125,11 +184,11 @@
           </div>
         </div>
 
-        <!-- Button -->
+        <!-- Dynamic Action Button based on Role -->
         <div class="md:col-span-2">
-          <button id="btnStartScrap" onclick="handleNewScrap()" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-sm shadow-indigo-100">
-            <i class="mdi mdi-cloud-search-outline text-lg"></i>
-            <span>Mulai Scrap</span>
+          <button id="btnAction" onclick="handleActionTrigger()" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-sm shadow-indigo-100">
+            <i id="btnActionIcon" class="mdi mdi-tag-plus-outline text-lg"></i>
+            <span id="btnActionText">Tambah Tag</span>
           </button>
         </div>
       </div>
@@ -165,7 +224,6 @@
         
         <!-- Controls: Sort Criteria & Tag Pagination -->
         <div class="flex flex-wrap items-center gap-3">
-          <!-- Sort Criteria -->
           <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
             <button onclick="changeSortCriteria('reach')" id="btnSortTagReach" class="px-3 py-1.5 rounded-lg font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1">
               <i class="mdi mdi-fire text-sm text-[#F59E0B]"></i> Reach
@@ -178,7 +236,6 @@
             </button>
           </div>
 
-          <!-- Tag Paging Controls (Next / Prev) -->
           <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
             <button onclick="prevTagPage()" id="btnPrevTags" class="px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
               <i class="mdi mdi-chevron-left text-sm"></i> Prev
@@ -208,9 +265,7 @@
           <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan jangkauan tertinggi</p>
         </div>
 
-        <!-- Filter & Sorting Bar for Posts (Kelipatan 5 & Paging) -->
         <div class="flex flex-wrap items-center gap-2.5">
-          <!-- Page Size (Kelipatan 5) -->
           <div class="flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-sm text-xs">
             <span class="text-[#475569]">Tampilkan:</span>
             <select id="postPageSizeSelect" onchange="onPostPageSizeChange()" class="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer">
@@ -221,7 +276,6 @@
             </select>
           </div>
 
-          <!-- Sort Method -->
           <div class="relative">
             <select id="postSortFilter" onchange="fetchPosts(1)" class="pl-8 pr-7 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] appearance-none shadow-sm">
               <option value="reach" selected>🔥 Tertinggi Est. Reach</option>
@@ -233,7 +287,6 @@
             <i class="mdi mdi-chevron-down absolute right-2 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
           </div>
 
-          <!-- Total Post Badge -->
           <span class="text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 text-[#475569] font-medium shadow-sm flex items-center gap-1" id="postCountBadge">
             <i class="mdi mdi-database text-xs text-[#4F46E5]"></i> 0 Postingan
           </span>
@@ -265,18 +318,25 @@
   <script>
     const API_BASE_URL = "http://127.0.0.1:8000";
 
+    // MASTER USER SESSION (Default: Admin)
+    let currentUser = JSON.parse(localStorage.getItem("threadlens_user") || JSON.stringify({
+      username: "admin",
+      role: "admin",
+      name: "Operations Admin"
+    }));
+
     // State Management
     let currentTagPage = 1;
-    const tagPageSize = 10; // Persis 10 per halaman sesuai permintaan
+    const tagPageSize = 10;
     let totalTagPages = 2;
 
     let currentPostPage = 1;
-    let postPageSize = 5; // Default kelipatan 5
+    let postPageSize = 5;
     let totalPostPages = 1;
 
     let currentSortCriteria = 'reach'; 
     let activeTag = "coffee";
-    let activeDate = getTodayFormatted(); // Default hari ini (YYYY-MM-DD)
+    let activeDate = getTodayFormatted();
     let customTagsList = ["#coffee", "#skincare", "#kuliner", "#startup", "#finansial"];
     let currentPostsData = [];
 
@@ -285,17 +345,145 @@
       return today.toISOString().split('T')[0];
     }
 
-    // Initialize Date Input Default ke Hari Ini
     document.getElementById("targetDateInput").value = activeDate;
 
-    // Shortcut Date Preset
+    // ================= RBAC & AUTHENTICATION =================
+    function updateRoleUI() {
+      document.getElementById("userNameLabel").textContent = currentUser.name;
+      const roleBadge = document.getElementById("userRoleBadge");
+      const avatarChar = document.getElementById("userAvatarChar");
+      const btnActionText = document.getElementById("btnActionText");
+      const btnActionIcon = document.getElementById("btnActionIcon");
+      const roleInstruction = document.getElementById("roleInstructionText");
+      const input = document.getElementById("customTagInput");
+
+      avatarChar.textContent = currentUser.name.charAt(0).toUpperCase();
+
+      if (currentUser.role === "super_admin") {
+        roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-purple-50 text-purple-700 border border-purple-200";
+        roleBadge.textContent = "SUPER ADMIN";
+        btnActionText.textContent = "Tambah Tag";
+        btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
+        input.placeholder = "Ketik tag baru untuk di-scrape (Super Admin Mode)...";
+        roleInstruction.innerHTML = "Status: <strong>Super Admin</strong> (Akses Penuh: Tambah Tag, Delete, dan Scrape Live)";
+      } else if (currentUser.role === "admin") {
+        roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
+        roleBadge.textContent = "ADMIN";
+        btnActionText.textContent = "Tambah Tag";
+        btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
+        input.placeholder = "Ketik tag baru untuk di-scrape...";
+        roleInstruction.innerHTML = "Status: <strong>Admin</strong> (Dapat menambah tagging baru & menjalankan scraper)";
+      } else {
+        // ROLE USER: HANYA BISA SEARCHING, TIDAK BISA TAMBAH TAGGING
+        roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700 border border-slate-200";
+        roleBadge.textContent = "USER (READ-ONLY)";
+        btnActionText.textContent = "Cari Tag";
+        btnActionIcon.className = "mdi mdi-magnify text-lg";
+        input.placeholder = "Cari topik yang sudah tersedia (Mode Pencarian User)...";
+        roleInstruction.innerHTML = "Status: <strong>User</strong> (Mode Terbatas: Hanya dapat mencari postingan, <em>tidak diizinkan menambah tag baru</em>)";
+      }
+    }
+
+    function openLoginModal() {
+      document.getElementById("loginModal").classList.remove("hidden");
+    }
+
+    function closeLoginModal() {
+      document.getElementById("loginModal").classList.add("hidden");
+    }
+
+    function fillLoginPreset(username) {
+      document.getElementById("loginUsername").value = username;
+      document.getElementById("loginPassword").value = "password123";
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById("loginUsername").value.trim();
+      const p = document.getElementById("loginPassword").value;
+      const errBox = document.getElementById("loginError");
+      errBox.classList.add("hidden");
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: u, password: p })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Login gagal");
+        }
+
+        const data = await res.json();
+        currentUser = data.user;
+        localStorage.setItem("threadlens_user", JSON.stringify(currentUser));
+        closeLoginModal();
+        updateRoleUI();
+        alert(`Berhasil masuk sebagai ${currentUser.name} (${currentUser.role})`);
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.classList.remove("hidden");
+      }
+    }
+
+    // TRIGGER SESUAI ROLE
+    async function handleActionTrigger() {
+      const input = document.getElementById("customTagInput");
+      let val = input.value.trim();
+      if (!val) return;
+      if (!val.startsWith("#")) val = "#" + val;
+      const cleanTag = val.replace("#", "").toLowerCase();
+
+      // JIKA USER: HANYA BISA FILTER / SEARCH
+      if (currentUser.role === "user") {
+        selectTag(cleanTag);
+        input.value = "";
+        return;
+      }
+
+      // JIKA ADMIN / SUPER ADMIN: BISA TAMBAH TAGGING KE SERVER
+      const country = document.getElementById("countrySelect").value;
+      const btn = document.getElementById("btnAction");
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-lg"></i> Menyimpan...`;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/tags/register?tag=${cleanTag}&country=${country}`, {
+          method: "POST",
+          headers: {
+            "x-user-role": currentUser.role
+          }
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Gagal menambah tag");
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+
+      if (!customTagsList.includes(val)) {
+        customTagsList.unshift(val);
+        renderCustomTags();
+      }
+
+      input.value = "";
+      btn.disabled = false;
+      updateRoleUI();
+      selectTag(cleanTag);
+    }
+
+    // ================= DATE PRESETS & CONTROLS =================
     function setPresetDate(offsetDays) {
       const d = new Date();
       d.setDate(d.getDate() - offsetDays);
       activeDate = d.toISOString().split('T')[0];
       document.getElementById("targetDateInput").value = activeDate;
 
-      // Update button visual
       document.querySelectorAll('#btnDateToday, #btnDateYesterday, #btnDate2DaysAgo').forEach(b => {
         b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100";
       });
@@ -587,38 +775,6 @@
       `).join("");
     }
 
-    // 4. Handle Scraping Topik Baru
-    async function handleNewScrap() {
-      const input = document.getElementById("customTagInput");
-      let val = input.value.trim();
-      if (!val) return;
-      if (!val.startsWith("#")) val = "#" + val;
-
-      const cleanTag = val.replace("#", "").toLowerCase();
-      const country = document.getElementById("countrySelect").value;
-      const btn = document.getElementById("btnStartScrap");
-
-      btn.disabled = true;
-      btn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-lg"></i> Scraping...`;
-
-      try {
-        await fetch(`${API_BASE_URL}/api/tags/register?tag=${cleanTag}&country=${country}`, { method: "POST" });
-      } catch (err) {
-        console.warn("Backend error:", err);
-      }
-
-      if (!customTagsList.includes(val)) {
-        customTagsList.unshift(val);
-        renderCustomTags();
-      }
-
-      input.value = "";
-      btn.disabled = false;
-      btn.innerHTML = `<i class="mdi mdi-cloud-search-outline text-lg"></i> <span>Mulai Scrap</span>`;
-
-      selectTag(cleanTag);
-    }
-
     function selectTag(tag) {
       activeTag = tag;
       document.getElementById("currentFilterTagTitle").textContent = "#" + tag;
@@ -678,7 +834,8 @@
       downloadAnchor.remove();
     }
 
-    // Init
+    // Inisialisasi Sistem
+    updateRoleUI();
     checkBackendStatus();
     renderCustomTags();
     fetchTags(1);

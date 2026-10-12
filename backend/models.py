@@ -2,6 +2,15 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, date
 
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+class UserProfile(BaseModel):
+    username: str
+    role: str = Field(description="super_admin, admin, user")
+    name: str
+
 class ThreadMetrics(BaseModel):
     reach: int = Field(default=0, description="Estimated reach / views")
     replies: int = Field(default=0, description="Total replies / comments")
@@ -18,7 +27,7 @@ class ThreadPost(BaseModel):
     content: str
     post_url: Optional[str] = None
     posted_date: str = Field(description="Format YYYY-MM-DD")
-    posted_at_formatted: str = Field(description="Human readable time e.g. 2 jam lalu atau 08 Okt 2026")
+    posted_at_formatted: str = Field(description="Waktu posting relatif e.g. 2 jam lalu")
     metrics: ThreadMetrics
 
 class TagSummary(BaseModel):
