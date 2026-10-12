@@ -117,7 +117,7 @@
       </div>
     </header>
 
-    <!-- Section 1: Input Scraping Mandiri & Filter Tanggal -->
+    <!-- Section 1: Input Scraping Mandiri & Country Filter (Filter Tanggal Dihilangkan Sesuai Request) -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
@@ -129,36 +129,26 @@
             <span id="roleInstructionText">Role <strong>Admin / Super Admin</strong> dapat mendaftarkan tag baru. Role <strong>User</strong> hanya dapat mencari.</span>
           </p>
         </div>
-        <div class="flex items-center gap-2 text-xs text-[#475569]">
-          <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-700">Tanggal Aktif: <strong id="activeDateBadge" class="text-[#4F46E5]">Hari Ini</strong></span>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 flex items-center gap-1.5">
+            <i class="mdi mdi-lightning-bolt text-indigo-600"></i>
+            Asynchronous Background Scraper Active
+          </span>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
         <!-- Tagging / Search Input -->
-        <div class="md:col-span-4 relative">
+        <div class="md:col-span-7 relative">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             <i class="mdi mdi-pound text-lg text-[#4F46E5]"></i>
           </div>
           <input 
             type="text" 
             id="customTagInput" 
-            placeholder="Cari atau tambah tag (misal: v60, montblanc, coffee)..." 
+            placeholder="Ketik tag baru untuk di-scrape (misal: coffee, kuliner, v60)..." 
             class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition"
             onkeypress="if(event.key==='Enter') handleActionTrigger()"
-          />
-        </div>
-
-        <!-- Date Filter (Bisa Mundur / Historis) -->
-        <div class="md:col-span-3 relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <i class="mdi mdi-calendar-range text-lg text-[#4F46E5]"></i>
-          </div>
-          <input 
-            type="date" 
-            id="targetDateInput" 
-            onchange="onDateChanged()"
-            class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition"
           />
         </div>
 
@@ -167,7 +157,7 @@
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <i class="mdi mdi-earth text-lg text-[#475569]"></i>
           </div>
-          <select id="countrySelect" onchange="fetchPosts()" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+          <select id="countrySelect" onchange="if(activeTag) fetchPosts(1)" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
             <option value="ID" selected>🇮🇩 Indonesia (ID)</option>
             <option value="GLOBAL">🌐 Global (Semua Wilayah)</option>
             <option value="MY">🇲🇾 Malaysia (MY)</option>
@@ -188,17 +178,15 @@
         </div>
       </div>
 
-      <!-- Quick Preset Tanggal & Saved Tags -->
-      <div class="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-t border-slate-100">
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="text-[#475569] font-medium">Shortcut Tanggal:</span>
-          <button onclick="setPresetDate(-1)" id="btnDateAll" class="px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white">Semua Tanggal</button>
-          <button onclick="setPresetDate(0)" id="btnDateToday" class="px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100">Hari Ini</button>
-          <button onclick="setPresetDate(1)" id="btnDateYesterday" class="px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100">Kemarin</button>
-          <button onclick="setPresetDate(2)" id="btnDate2DaysAgo" class="px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100">2 Hari Lalu</button>
-        </div>
-        <div id="activeTagsContainer" class="flex flex-wrap gap-1.5">
-          <!-- Rendered via JS -->
+      <!-- Quick Tag Library Bar (Muncul jika ada tag terdaftar) -->
+      <div id="quickTagsWrapper" class="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-t border-slate-100 hidden">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[#475569] font-medium flex items-center gap-1">
+            <i class="mdi mdi-history text-slate-400"></i> Tag Terdaftar:
+          </span>
+          <div id="activeTagsContainer" class="flex flex-wrap gap-1.5">
+            <!-- Rendered via JS -->
+          </div>
         </div>
       </div>
     </div>
@@ -211,10 +199,10 @@
             <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-[#F59E0B] flex items-center justify-center font-bold">
               <i class="mdi mdi-trending-up text-lg"></i>
             </div>
-            <h2 class="text-base font-bold text-slate-900">Top 20 Trending Tagging Threads</h2>
+            <h2 class="text-base font-bold text-slate-900">Top Trending Tagging Threads</h2>
           </div>
           <p class="text-xs text-[#475569] mt-0.5">
-            Menampilkan 10 tag per halaman agar tidak menumpuk. Diurutkan berdasarkan <strong><span id="currentSortLabel">Total Est. Reach</span></strong>.
+            Menampilkan ringkasan metrik nyata dari Threads. Diurutkan berdasarkan <strong><span id="currentSortLabel">Total Est. Reach</span></strong>.
           </p>
         </div>
         
@@ -227,6 +215,9 @@
             <button onclick="changeSortCriteria('comments')" id="btnSortTagComments" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
               <i class="mdi mdi-comment-multiple-outline text-sm"></i> Komentar
             </button>
+            <button onclick="changeSortCriteria('likes')" id="btnSortTagLikes" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
+              <i class="mdi mdi-heart-outline text-sm"></i> Likes
+            </button>
             <button onclick="changeSortCriteria('posts')" id="btnSortTagPosts" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
               <i class="mdi mdi-post-outline text-sm"></i> Jml Post
             </button>
@@ -236,8 +227,8 @@
             <button onclick="prevTagPage()" id="btnPrevTags" class="px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
               <i class="mdi mdi-chevron-left text-sm"></i> Prev
             </button>
-            <span id="tagPageInfo" class="px-2 text-[11px] font-mono font-semibold text-slate-700">Hal 1 / 2</span>
-            <button onclick="nextTagPage()" id="btnNextTags" class="px-2.5 py-1 rounded-lg bg-white text-slate-800 shadow-sm hover:bg-slate-50 flex items-center gap-1">
+            <span id="tagPageInfo" class="px-2 text-[11px] font-mono font-semibold text-slate-700">Hal 1 / 1</span>
+            <button onclick="nextTagPage()" id="btnNextTags" class="px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
               Next <i class="mdi mdi-chevron-right text-sm"></i>
             </button>
           </div>
@@ -256,9 +247,9 @@
         <div>
           <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
             <i class="mdi mdi-card-text-outline text-[#4F46E5] text-xl"></i>
-            Daftar Postingan Terfilter: <span id="currentFilterTagTitle" class="text-[#4F46E5] font-mono">#coffee</span>
+            Daftar Postingan Terfilter: <span id="currentFilterTagTitle" class="text-[#4F46E5] font-mono">-</span>
           </h2>
-          <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan jangkauan tertinggi</p>
+          <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan interaksi dan jangkauan nyata dari Threads</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
@@ -277,7 +268,7 @@
               <option value="reach" selected>🔥 Tertinggi Est. Reach</option>
               <option value="replies">💬 Tertinggi Komentar (Replies)</option>
               <option value="likes">❤️ Tertinggi Likes</option>
-              <option value="newest">🕒 Terbaru Hari Ini</option>
+              <option value="newest">🕒 Urutan Terbaru</option>
             </select>
             <i class="mdi mdi-sort absolute left-2.5 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
             <i class="mdi mdi-chevron-down absolute right-2 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
@@ -296,13 +287,13 @@
 
       <!-- Pagination Footer for Posts (Next / Previous) -->
       <div class="flex items-center justify-between bg-white border border-slate-200 rounded-2xl px-5 py-3.5 shadow-sm text-xs text-[#475569]">
-        <div id="postsPagingInfo">Menampilkan 1 - 5 dari 5 postingan</div>
+        <div id="postsPagingInfo">Menampilkan 0 postingan</div>
         <div class="flex items-center gap-2">
           <button onclick="prevPostPage()" id="btnPrevPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
             <i class="mdi mdi-chevron-left text-sm"></i> Sebelumnya
           </button>
           <span id="postPageIndicator" class="font-mono font-semibold text-slate-800 px-2">Hal 1 / 1</span>
-          <button onclick="nextPostPage()" id="btnNextPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm">
+          <button onclick="nextPostPage()" id="btnNextPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
             Selanjutnya <i class="mdi mdi-chevron-right text-sm"></i>
           </button>
         </div>
@@ -314,31 +305,25 @@
   <script>
     const API_BASE_URL = "http://127.0.0.1:8000";
 
-    // MASTER USER SESSION (Tidak ada auto-login, wajib login terlebih dahulu)
+    // MASTER USER SESSION (Wajib login terlebih dahulu)
     let currentUser = null;
 
     // State Management
     let currentTagPage = 1;
     const tagPageSize = 10;
-    let totalTagPages = 2;
+    let totalTagPages = 1;
 
     let currentPostPage = 1;
     let postPageSize = 5;
     let totalPostPages = 1;
 
     let currentSortCriteria = 'reach'; 
-    let activeTag = "coffee";
-    let activeDate = "";
-    let customTagsList = ["#coffee", "#skincare", "#kuliner", "#startup", "#finansial"];
+    let activeTag = "";
+    let registeredTags = [];
     let currentPostsData = [];
 
-    function getTodayFormatted() {
-      const today = new Date();
-      return today.toISOString().split('T')[0];
-    }
-
-    document.getElementById("targetDateInput").value = "";
-    document.getElementById("activeDateBadge").textContent = "Semua Tanggal (Terkini)";
+    // Polling Manager untuk Asynchronous Background Scraper
+    let pollingInterval = null;
 
     // ================= RBAC & AUTHENTICATION =================
     function updateRoleUI() {
@@ -360,14 +345,14 @@
         if (btnActionText) btnActionText.textContent = "Tambah Tag";
         if (btnActionIcon) btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
         input.placeholder = "Ketik tag baru untuk di-scrape (Super Admin Mode)...";
-        roleInstruction.innerHTML = "Status: <strong>Super Admin</strong> (Akses Penuh: Tambah Tag, Delete, dan Scrape Live)";
+        roleInstruction.innerHTML = "Status: <strong>Super Admin</strong> (Akses Penuh: Tambah Tag, Refresh, Hapus, dan Scrape Live)";
       } else if (currentUser.role === "admin") {
         roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
         roleBadge.textContent = "ADMIN";
         if (btnActionText) btnActionText.textContent = "Tambah Tag";
         if (btnActionIcon) btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
         input.placeholder = "Ketik tag baru untuk di-scrape...";
-        roleInstruction.innerHTML = "Status: <strong>Admin</strong> (Dapat menambah tagging baru & menjalankan scraper)";
+        roleInstruction.innerHTML = "Status: <strong>Admin</strong> (Dapat menambah tagging baru & menjalankan background scraper)";
       } else {
         // ROLE USER: HANYA BISA SEARCHING, TIDAK BISA TAMBAH TAGGING
         roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700 border border-slate-200";
@@ -390,6 +375,7 @@
     }
 
     function handleLogout() {
+      if (pollingInterval) clearInterval(pollingInterval);
       localStorage.removeItem("threadlens_user");
       showLoginScreen();
     }
@@ -426,9 +412,7 @@
         
         updateRoleUI();
         checkBackendStatus();
-        renderCustomTags();
         fetchTags(1);
-        fetchPosts(1);
       } catch (err) {
         errBox.textContent = err.message;
         errBox.classList.remove("hidden");
@@ -438,22 +422,22 @@
       }
     }
 
-    // TRIGGER SESUAI ROLE
+    // TRIGGER SESUAI ROLE (ASYNCHRONOUS NON-BLOCKING)
     async function handleActionTrigger() {
       const input = document.getElementById("customTagInput");
       let val = input.value.trim();
       if (!val) return;
-      if (!val.startsWith("#")) val = "#" + val;
-      const cleanTag = val.replace("#", "").toLowerCase();
+      const cleanTag = val.replace("#", "").trim().toLowerCase();
+      if (!cleanTag) return;
 
       // JIKA USER: HANYA BISA FILTER / SEARCH
       if (currentUser && currentUser.role === "user") {
-        selectTag(cleanTag);
         input.value = "";
+        selectTag(cleanTag);
         return;
       }
 
-      // JIKA ADMIN / SUPER ADMIN: BISA TAMBAH TAGGING KE SERVER
+      // JIKA ADMIN / SUPER ADMIN: TAMBAH TAGGING DENGAN ASYNC BACKGROUND SCRAPER
       const country = document.getElementById("countrySelect").value;
       const btn = document.getElementById("btnAction");
       const btnIcon = document.getElementById("btnActionIcon");
@@ -461,7 +445,7 @@
 
       if (btnIcon && btnText) {
         btnIcon.className = "mdi mdi-loading mdi-spin text-lg";
-        btnText.textContent = "Menyimpan...";
+        btnText.textContent = "Mendaftarkan...";
       }
       btn.disabled = true;
 
@@ -478,60 +462,107 @@
           throw new Error(err.detail || "Gagal menambah tag");
         }
 
-        if (!customTagsList.includes(val)) {
-          customTagsList.unshift(val);
-          renderCustomTags();
-        }
-
         input.value = "";
+        activeTag = cleanTag;
+        document.getElementById("currentFilterTagTitle").textContent = "#" + cleanTag;
+
+        // Segera render tag & mulai polling status
+        await fetchTags(1);
+        fetchPosts(1);
+        startPollingTag(cleanTag);
       } catch (err) {
         alert(err.message);
       } finally {
         btn.disabled = false;
         updateRoleUI();
-        selectTag(cleanTag);
       }
     }
 
-    // ================= DATE PRESETS & CONTROLS =================
-    function setPresetDate(offsetDays) {
-      document.querySelectorAll('#btnDateAll, #btnDateToday, #btnDateYesterday, #btnDate2DaysAgo').forEach(b => {
-        b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100";
-      });
+    // POLLING ASYNC SCRAPER PROGRESS
+    function startPollingTag(tag) {
+      if (pollingInterval) clearInterval(pollingInterval);
 
-      if (offsetDays === -1) {
-        activeDate = "";
-        document.getElementById("targetDateInput").value = "";
-        document.getElementById("btnDateAll").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
-        document.getElementById("activeDateBadge").textContent = "Semua Tanggal (Terkini)";
-      } else {
-        const d = new Date();
-        d.setDate(d.getDate() - offsetDays);
-        activeDate = d.toISOString().split('T')[0];
-        document.getElementById("targetDateInput").value = activeDate;
+      pollingInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/tags/status/${tag}`);
+          if (!res.ok) return;
+          const statusData = await res.json();
 
-        if (offsetDays === 0) {
-          document.getElementById("btnDateToday").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
-          document.getElementById("activeDateBadge").textContent = "Hari Ini (" + activeDate + ")";
-        } else if (offsetDays === 1) {
-          document.getElementById("btnDateYesterday").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
-          document.getElementById("activeDateBadge").textContent = "Kemarin (" + activeDate + ")";
-        } else {
-          document.getElementById("btnDate2DaysAgo").className = "px-2.5 py-1 rounded-lg font-semibold bg-[#4F46E5] text-white";
-          document.getElementById("activeDateBadge").textContent = activeDate;
+          if (statusData.status === "ready" || statusData.status === "failed") {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            // Perbarui tags list dengan data hasil akhir
+            await fetchTags(currentTagPage);
+            if (activeTag === tag) {
+              fetchPosts(1);
+            }
+          } else {
+            // Masih scraping: perbarui daftar tags agar status card tetap akurat
+            fetchTags(currentTagPage);
+          }
+        } catch (e) {
+          console.warn("Polling error:", e);
         }
-      }
-
-      fetchPosts(1);
+      }, 2500);
     }
 
-    function onDateChanged() {
-      activeDate = document.getElementById("targetDateInput").value || "";
-      document.querySelectorAll('#btnDateAll, #btnDateToday, #btnDateYesterday, #btnDate2DaysAgo').forEach(b => {
-        b.className = "px-2.5 py-1 rounded-lg text-[#475569] hover:bg-slate-100";
-      });
-      document.getElementById("activeDateBadge").textContent = activeDate ? activeDate : "Semua Tanggal (Terkini)";
-      fetchPosts(1);
+    // REFRESH SCRAPING TAG
+    async function handleRefreshTag(tag, event) {
+      if (event) event.stopPropagation();
+      if (!currentUser || currentUser.role === "user") {
+        alert("Hanya Admin yang dapat merefresh data.");
+        return;
+      }
+
+      const country = document.getElementById("countrySelect").value;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/tags/refresh?tag=${tag}&country=${country}`, {
+          method: "POST",
+          headers: { "x-user-role": currentUser.role }
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Gagal merefresh");
+        }
+        activeTag = tag;
+        document.getElementById("currentFilterTagTitle").textContent = "#" + tag;
+        await fetchTags(currentTagPage);
+        fetchPosts(1);
+        startPollingTag(tag);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // DELETE TAG
+    async function handleDeleteTag(tag, event) {
+      if (event) event.stopPropagation();
+      if (!currentUser || currentUser.role === "user") {
+        alert("Hanya Admin yang dapat menghapus data.");
+        return;
+      }
+
+      if (!confirm(`Apakah Anda yakin ingin menghapus tag #${tag}?`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/tags/${tag}`, {
+          method: "DELETE",
+          headers: { "x-user-role": currentUser.role }
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Gagal menghapus tag");
+        }
+
+        if (activeTag === tag) {
+          activeTag = "";
+          document.getElementById("currentFilterTagTitle").textContent = "-";
+        }
+        await fetchTags(1);
+        fetchPosts(1);
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
     // 1. Cek Backend Python
@@ -549,28 +580,30 @@
       }
     }
 
-    // 2. Fetch Tags dengan Pagination (10 per halaman)
+    // 2. Fetch Tags dengan Pagination
     async function fetchTags(page = 1) {
       currentTagPage = page;
       const container = document.getElementById("top20TagsGrid");
-      container.innerHTML = Array(10).fill(0).map(() => `
-        <div class="p-3.5 rounded-2xl border border-slate-100 bg-white animate-pulse">
-          <div class="h-3 bg-slate-100 rounded w-1/3 mb-3"></div>
-          <div class="h-4 bg-slate-200 rounded w-2/3 mb-2"></div>
-          <div class="h-3 bg-slate-100 rounded w-1/2"></div>
-        </div>
-      `).join("");
 
       try {
         const res = await fetch(`${API_BASE_URL}/api/tags?sort_by=${currentSortCriteria}&page=${currentTagPage}&page_size=${tagPageSize}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         
+        registeredTags = data.items;
         totalTagPages = data.pagination.total_pages;
         updateTagPagingControls(data.pagination);
         renderTagsUI(data.items);
+        renderQuickTagsChips(data.items);
+
+        // Jika belum ada activeTag dan ada tag tersedia, pilih tag pertama
+        if (!activeTag && data.items.length > 0) {
+          selectTag(data.items[0].tag);
+        } else if (data.items.length === 0) {
+          fetchPosts(1);
+        }
       } catch (err) {
-        console.warn("Using fallback tags:", err);
+        console.warn("Fetch tags error:", err);
       }
     }
 
@@ -601,12 +634,44 @@
 
     function renderTagsUI(tags) {
       const container = document.getElementById("top20TagsGrid");
+
+      if (tags.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-10 bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center mx-auto mb-2">
+              <i class="mdi mdi-tag-off-outline text-xl"></i>
+            </div>
+            <div class="text-xs font-bold text-slate-800">Belum Ada Tagging Terdaftar</div>
+            <p class="text-[11px] text-[#475569] mt-1 max-w-sm mx-auto">
+              ${currentUser && currentUser.role !== 'user' 
+                ? 'Daftarkan hashtag atau kata kunci baru pada formulir di atas untuk memulai pemindaian Threads secara live.' 
+                : 'Belum ada data topik yang dapat dicari. Hubungi Admin untuk mendaftarkan tag baru.'}
+            </p>
+          </div>
+        `;
+        return;
+      }
+
       container.innerHTML = tags.map(t => {
         const isSelected = activeTag === t.tag;
+        const isScraping = t.status === "scraping";
+        const isFailed = t.status === "failed";
+
+        let statusBadge = '';
+        if (isScraping) {
+          statusBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 animate-pulse"><i class="mdi mdi-loading mdi-spin"></i> Memindai...</span>`;
+        } else if (isFailed) {
+          statusBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1"><i class="mdi mdi-alert-circle text-xs"></i> Gagal</span>`;
+        } else {
+          statusBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center gap-1"><i class="mdi mdi-check-circle text-xs"></i> Siap</span>`;
+        }
+
+        const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin');
+
         return `
           <div 
             onclick="selectTag('${t.tag}')"
-            class="p-3.5 rounded-2xl border cursor-pointer transition text-left flex flex-col justify-between ${
+            class="p-3.5 rounded-2xl border cursor-pointer transition text-left flex flex-col justify-between relative group ${
               isSelected 
                 ? 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-lg shadow-indigo-100' 
                 : 'bg-white border-slate-200 hover:border-[#4F46E5] text-slate-900 hover:shadow-sm'
@@ -616,13 +681,7 @@
               <span class="text-xs font-bold font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}">
                 #${t.rank}
               </span>
-              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                isSelected 
-                  ? 'bg-white/20 text-white' 
-                  : 'bg-amber-50 text-[#D97706] border border-amber-200/60'
-              }">
-                ${t.growth}
-              </span>
+              ${statusBadge}
             </div>
             
             <div class="my-2.5">
@@ -630,19 +689,59 @@
                 <i class="mdi ${t.icon || 'mdi-pound'} text-base ${isSelected ? 'text-amber-300' : 'text-[#4F46E5]'}"></i>
                 #${t.label}
               </div>
-              <div class="text-[11px] mt-0.5 ${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">${t.total_posts.toLocaleString()} posts</div>
+              <div class="text-[11px] mt-0.5 ${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">
+                ${isScraping ? 'Memproses di latar belakang...' : `${t.total_posts.toLocaleString()} posts riil`}
+              </div>
             </div>
 
-            <div class="border-t ${isSelected ? 'border-indigo-400/30' : 'border-slate-100'} pt-2 text-[11px] flex justify-between font-mono">
+            <div class="border-t ${isSelected ? 'border-indigo-400/30' : 'border-slate-100'} pt-2 text-[11px] flex justify-between items-center font-mono">
               <span class="${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">Reach:</span>
-              <span class="font-bold ${isSelected ? 'text-white' : 'text-[#F59E0B]'}">${(t.total_reach / 1000).toFixed(0)}k</span>
+              <span class="font-bold ${isSelected ? 'text-white' : 'text-[#F59E0B]'}">
+                ${t.total_reach >= 1000 ? (t.total_reach / 1000).toFixed(1) + 'k' : t.total_reach}
+              </span>
             </div>
+
+            ${canManage ? `
+              <div class="absolute top-2 right-2 hidden group-hover:flex items-center gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 shadow-sm z-10">
+                <button onclick="handleRefreshTag('${t.tag}', event)" title="Scrape Ulang" class="p-1 rounded hover:bg-slate-100 text-slate-600 hover:text-indigo-600 transition">
+                  <i class="mdi mdi-refresh text-xs"></i>
+                </button>
+                <button onclick="handleDeleteTag('${t.tag}', event)" title="Hapus Tag" class="p-1 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition">
+                  <i class="mdi mdi-trash-can-outline text-xs"></i>
+                </button>
+              </div>
+            ` : ''}
           </div>
         `;
       }).join("");
     }
 
-    // 3. Fetch Posts dengan Filter Tanggal & Paging Kelipatan 5
+    function renderQuickTagsChips(tags) {
+      const wrapper = document.getElementById("quickTagsWrapper");
+      const container = document.getElementById("activeTagsContainer");
+      if (tags.length === 0) {
+        wrapper.classList.add("hidden");
+        return;
+      }
+      wrapper.classList.remove("hidden");
+      container.innerHTML = tags.map(t => `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs border transition cursor-pointer ${
+          activeTag === t.tag 
+            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold' 
+            : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+        }">
+          <i class="mdi mdi-pound text-xs text-[#4F46E5]"></i>
+          <span onclick="selectTag('${t.tag}')">${t.tag}</span>
+          ${(currentUser && currentUser.role !== 'user') ? `
+            <button onclick="handleDeleteTag('${t.tag}', event)" class="text-slate-400 hover:text-rose-500 font-bold ml-0.5" title="Hapus tag">
+              <i class="mdi mdi-close-circle text-xs"></i>
+            </button>
+          ` : ''}
+        </span>
+      `).join("");
+    }
+
+    // 3. Fetch Posts Tanpa Filter Tanggal (Real Posts Paging)
     async function fetchPosts(page = 1) {
       currentPostPage = page;
       const grid = document.getElementById("postsGrid");
@@ -650,6 +749,20 @@
       const sort = document.getElementById("postSortFilter").value;
       const country = document.getElementById("countrySelect").value;
 
+      if (!activeTag) {
+        badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> 0 Postingan`;
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-14 border border-slate-200 rounded-2xl bg-white shadow-sm">
+            <i class="mdi mdi-pound text-4xl text-slate-300 mb-2 block"></i>
+            <p class="text-sm font-semibold text-slate-800">Belum ada tag yang dipilih</p>
+            <p class="text-xs text-[#475569] mt-1">Silakan ketik dan daftarkan tag baru di atas atau pilih tag dari daftar.</p>
+          </div>
+        `;
+        updatePostPagingControls({ page: 1, page_size: postPageSize, total_items: 0, total_pages: 1, has_prev: false, has_next: false });
+        return;
+      }
+
+      // Skeleton loader
       grid.innerHTML = Array(3).fill(0).map(() => `
         <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm animate-pulse space-y-3">
           <div class="flex gap-3 items-center">
@@ -660,7 +773,8 @@
             </div>
           </div>
           <div class="h-12 bg-slate-100 rounded"></div>
-          <div class="grid grid-cols-3 gap-2 pt-2">
+          <div class="grid grid-cols-4 gap-2 pt-2">
+            <div class="h-8 bg-slate-100 rounded"></div>
             <div class="h-8 bg-slate-100 rounded"></div>
             <div class="h-8 bg-slate-100 rounded"></div>
             <div class="h-8 bg-slate-100 rounded"></div>
@@ -669,18 +783,42 @@
       `).join("");
 
       try {
-        const dateParam = activeDate ? `&target_date=${activeDate}` : '';
-        const url = `${API_BASE_URL}/api/posts?tag=${activeTag}&country=${country}${dateParam}&sort_by=${sort}&page=${currentPostPage}&page_size=${postPageSize}`;
+        const url = `${API_BASE_URL}/api/posts?tag=${activeTag}&country=${country}&sort_by=${sort}&page=${currentPostPage}&page_size=${postPageSize}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error();
         const data = await res.json();
-        
+
+        // JIKA STATUS TAG SEDANG SCRAPING: TAMPILKAN STATUS ASINKRON AKTIF
+        if (data.status === "scraping") {
+          badge.innerHTML = `<i class="mdi mdi-loading mdi-spin text-xs text-amber-500"></i> Memindai...`;
+          grid.innerHTML = `
+            <div class="col-span-full bg-white border border-indigo-100 rounded-2xl p-8 md:p-12 text-center space-y-4 shadow-sm animate-pulse">
+              <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center mx-auto shadow-inner">
+                <i class="mdi mdi-radar mdi-spin text-3xl"></i>
+              </div>
+              <div class="space-y-1">
+                <h3 class="text-base font-bold text-slate-900">Sedang Memindai Threads untuk #${activeTag}...</h3>
+                <p class="text-xs text-[#475569] max-w-md mx-auto leading-relaxed">
+                  Browser Playwright sedang membuka Threads di latar belakang untuk mengekstrak postingan, likes, komentar, repost asli, dan tautan permalink.
+                </p>
+              </div>
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 text-amber-800 text-xs rounded-full border border-amber-200 font-semibold">
+                <i class="mdi mdi-loading mdi-spin text-amber-600"></i>
+                <span>${data.status_message || 'Sedang memindai Threads di latar belakang...'}</span>
+              </div>
+            </div>
+          `;
+          updatePostPagingControls({ page: 1, page_size: postPageSize, total_items: 0, total_pages: 1, has_prev: false, has_next: false });
+          startPollingTag(activeTag);
+          return;
+        }
+
         currentPostsData = data.items;
         totalPostPages = data.pagination.total_pages;
 
         badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> ${data.pagination.total_items} Postingan`;
         updatePostPagingControls(data.pagination);
-        renderPostsUI(data.items, data.filter_note);
+        renderPostsUI(data.items);
       } catch (err) {
         console.warn("Posts fetch fallback:", err);
       }
@@ -694,8 +832,7 @@
     function updatePostPagingControls(p) {
       const startItem = p.total_items === 0 ? 0 : (p.page - 1) * p.page_size + 1;
       const endItem = Math.min(p.page * p.page_size, p.total_items);
-      const dateText = activeDate ? `Tgl: ${activeDate}` : "Semua Tanggal";
-      document.getElementById("postsPagingInfo").textContent = `Menampilkan ${startItem} - ${endItem} dari ${p.total_items} postingan (${dateText})`;
+      document.getElementById("postsPagingInfo").textContent = `Menampilkan ${startItem} - ${endItem} dari ${p.total_items} postingan riil`;
       document.getElementById("postPageIndicator").textContent = `Hal ${p.page} / ${p.total_pages}`;
 
       const prevBtn = document.getElementById("btnPrevPosts");
@@ -703,12 +840,12 @@
 
       prevBtn.disabled = !p.has_prev;
       prevBtn.className = p.has_prev
-        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm"
+        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm cursor-pointer"
         : "px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1";
 
       nextBtn.disabled = !p.has_next;
       nextBtn.className = p.has_next
-        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm"
+        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm cursor-pointer"
         : "px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1";
     }
 
@@ -720,27 +857,22 @@
       if (currentPostPage < totalPostPages) fetchPosts(currentPostPage + 1);
     }
 
-    function renderPostsUI(posts, filterNote = "") {
+    function renderPostsUI(posts) {
       const grid = document.getElementById("postsGrid");
       if (posts.length === 0) {
         grid.innerHTML = `
           <div class="col-span-full text-center py-14 border border-slate-200 rounded-2xl bg-white shadow-sm">
-            <i class="mdi mdi-calendar-blank-outline text-4xl text-slate-300 mb-2 block"></i>
-            <p class="text-sm font-semibold text-slate-800">Tidak ada postingan untuk #${activeTag} ${activeDate ? 'pada tanggal ' + activeDate : ''}</p>
-            <p class="text-xs text-[#475569] mt-1">Coba klik 'Semua Tanggal' pada shortcut atau pilih topik lain.</p>
+            <i class="mdi mdi-card-bulleted-off-outline text-4xl text-slate-300 mb-2 block"></i>
+            <p class="text-sm font-semibold text-slate-800">Tidak ada postingan ditemukan untuk #${activeTag}</p>
+            <p class="text-xs text-[#475569] mt-1">
+              ${currentUser && currentUser.role !== 'user' ? 'Anda dapat merefresh scraping atau memasukkan kata kunci topik lainnya.' : 'Coba pilih kata kunci lainnya.'}
+            </p>
           </div>
         `;
         return;
       }
 
-      let noteHtml = filterNote ? `
-        <div class="col-span-full p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 mb-1 shadow-sm">
-          <i class="mdi mdi-information-outline text-lg text-amber-600 flex-shrink-0"></i>
-          <span>${filterNote}</span>
-        </div>
-      ` : '';
-
-      grid.innerHTML = noteHtml + posts.map((p, idx) => `
+      grid.innerHTML = posts.map((p, idx) => `
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#4F46E5] hover:shadow-md transition flex flex-col justify-between group">
           <div>
             <!-- Header -->
@@ -800,12 +932,12 @@
               </div>
             </div>
 
-            <!-- Card Footer: Tanggal Asli & Link Permalinks -->
+            <!-- Card Footer: Tanggal Asli & Link Permalinks Langsung -->
             <div class="flex items-center justify-between text-[11px] text-[#475569] pt-1">
-              <span class="flex items-center gap-1 font-medium bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 text-slate-700 font-mono text-[11px]">
+              <span class="flex items-center gap-1 font-medium bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700 font-mono text-[11px]">
                 <i class="mdi mdi-calendar-clock text-xs text-[#4F46E5]"></i> ${p.posted_at_formatted || p.posted_date}
               </span>
-              <a href="${p.post_url}" target="_blank" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white font-semibold flex items-center gap-1 transition shadow-sm" title="Buka langsung postingan spesifik ini di Threads">
+              <a href="${p.post_url}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white font-semibold flex items-center gap-1 transition shadow-sm" title="Buka langsung postingan spesifik ini di Threads">
                 Buka Postingan Ini <i class="mdi mdi-arrow-top-right text-xs"></i>
               </a>
             </div>
@@ -823,7 +955,7 @@
 
     function changeSortCriteria(criteria) {
       currentSortCriteria = criteria;
-      document.querySelectorAll('#btnSortTagReach, #btnSortTagPosts, #btnSortTagComments').forEach(b => {
+      document.querySelectorAll('#btnSortTagReach, #btnSortTagPosts, #btnSortTagComments, #btnSortTagLikes').forEach(b => {
         b.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1";
       });
 
@@ -834,6 +966,9 @@
       } else if (criteria === 'comments') {
         document.getElementById('btnSortTagComments').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
         label.textContent = "Total Komentar";
+      } else if (criteria === 'likes') {
+        document.getElementById('btnSortTagLikes').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
+        label.textContent = "Total Likes";
       } else if (criteria === 'posts') {
         document.getElementById('btnSortTagPosts').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
         label.textContent = "Jumlah Postingan";
@@ -842,38 +977,24 @@
       fetchTags(1);
     }
 
-    function renderCustomTags() {
-      const container = document.getElementById("activeTagsContainer");
-      container.innerHTML = customTagsList.map(tag => `
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-xs text-slate-800 border border-slate-200">
-          <i class="mdi mdi-pound text-xs text-[#4F46E5]"></i>
-          <span class="cursor-pointer font-medium hover:text-[#4F46E5]" onclick="selectTag('${tag.replace('#','')}')">${tag.replace('#','')}</span>
-          <button onclick="removeTag('${tag}')" class="text-slate-400 hover:text-rose-500 font-bold ml-0.5" title="Hapus dari library">
-            <i class="mdi mdi-close-circle text-xs"></i>
-          </button>
-        </span>
-      `).join("");
-    }
-
-    function removeTag(tag) {
-      customTagsList = customTagsList.filter(t => t !== tag);
-      renderCustomTags();
-    }
-
     function exportData(type) {
+      if (!currentPostsData || currentPostsData.length === 0) {
+        alert("Tidak ada data postingan untuk diekspor.");
+        return;
+      }
       const dataStr = type === 'json' 
         ? "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentPostsData, null, 2))
-        : "data:text/csv;charset=utf-8," + encodeURIComponent("ID,Tag,Author,Country,Date,Reach,Replies,Likes,Content\n" + currentPostsData.map(p => `"${p.id}","${p.tag}","${p.author}","${p.country}","${p.posted_date}",${p.metrics.reach},${p.metrics.replies},${p.metrics.likes},"${p.content.replace(/"/g, '""')}"`).join("\n"));
+        : "data:text/csv;charset=utf-8," + encodeURIComponent("ID,Tag,Author,Country,Date,Reach,Replies,Likes,Content,PostURL\n" + currentPostsData.map(p => `"${p.id}","${p.tag}","${p.author}","${p.country}","${p.posted_date}",${p.metrics.reach},${p.metrics.replies},${p.metrics.likes},"${p.content.replace(/"/g, '""')}","${p.post_url}"`).join("\n"));
       
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `threads_data_${activeTag}_${activeDate}.${type}`);
+      downloadAnchor.setAttribute("download", `threads_data_${activeTag || 'export'}.${type}`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
     }
 
-    // Inisialisasi Sistem: Wajib Sesi Login
+    // Inisialisasi Sistem: Cek Sesi Login Tersimpan
     const savedUser = localStorage.getItem("threadlens_user");
     if (savedUser) {
       try {
@@ -882,9 +1003,7 @@
         document.getElementById("mainDashboard").classList.remove("hidden");
         updateRoleUI();
         checkBackendStatus();
-        renderCustomTags();
         fetchTags(1);
-        fetchPosts(1);
       } catch (err) {
         showLoginScreen();
       }

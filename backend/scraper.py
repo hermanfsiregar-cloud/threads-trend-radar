@@ -33,21 +33,17 @@ class ThreadsScraper:
     def __init__(self):
         self.base_date = date.today()
 
-    async def scrape_by_tag_and_date(
+    async def scrape_by_tag(
         self, 
         tag: str, 
-        target_date: Optional[str] = None, 
-        country: str = "ID"
+        country: str = "ID",
+        force_refresh: bool = False
     ) -> List[ThreadPost]:
         clean_tag = tag.replace("#", "").strip().lower()
         cache_key = f"{clean_tag}_{country}"
         
-        if cache_key in REAL_POSTS_CACHE:
-            all_cached = REAL_POSTS_CACHE[cache_key]
-            if target_date:
-                matching = [p for p in all_cached if p.posted_date == target_date]
-                return matching if matching else all_cached
-            return all_cached
+        if cache_key in REAL_POSTS_CACHE and not force_refresh:
+            return REAL_POSTS_CACHE[cache_key]
 
         scraped_posts: List[ThreadPost] = []
 
@@ -65,6 +61,14 @@ class ThreadsScraper:
 
                 await page.goto(search_url, timeout=18000, wait_until="domcontentloaded")
                 await page.wait_for_timeout(2500)
+
+                # Scroll 2 kali secara bertahap untuk memuat lebih banyak postingan riil
+                try:
+                    for _ in range(2):
+                        await page.mouse.wheel(0, 1800)
+                        await page.wait_for_timeout(1000)
+                except Exception:
+                    pass
 
                 # Ekstraksi langsung seluruh post card dari Search DOM dengan struktur DOM riil
                 extracted_data = await page.evaluate('''() => {
@@ -224,9 +228,16 @@ class ThreadsScraper:
         if scraped_posts:
             REAL_POSTS_CACHE[cache_key] = scraped_posts
 
-        # Filter berdasarkan target_date jika ada
-        if target_date and scraped_posts:
-            matching = [p for p in scraped_posts if p.posted_date == target_date]
-            return matching if matching else scraped_posts
-
         return scraped_posts
+
+    async def scrape_by_tag_and_date(
+        self, 
+        tag: str, 
+        target_date: Optional[str] = None, 
+        country: str = "ID"
+    ) -> List[ThreadPost]:
+        posts = await self.scrape_by_tag(tag, country=country)
+        if target_date:
+            matching = [p for p in posts if p.posted_date == target_date]
+            return matching if matching else posts
+        return posts

@@ -32,11 +32,15 @@ class ThreadPost(BaseModel):
     metrics: ThreadMetrics
 
 class TagSummary(BaseModel):
-    rank: int
+    rank: int = 1
     tag: str
     label: str
-    icon: str = "mdi-tag-outline"
-    total_posts: int
-    total_reach: int
-    total_comments: int
-    growth: str = "+0%"
+    icon: str = "mdi-pound"
+    total_posts: int = 0
+    total_reach: int = 0
+    total_comments: int = 0
+    total_likes: int = 0
+    growth: str = "+New"
+    status: str = Field(default="ready", description="ready, scraping, failed")
+    status_message: str = Field(default="Siap", description="Status proses scraping")
+    last_scraped_at: Optional[str] = None

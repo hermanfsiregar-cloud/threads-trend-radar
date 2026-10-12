@@ -1,14 +1,15 @@
-from fastapi import FastAPI, Query, HTTPException, Header
+from fastapi import FastAPI, Query, HTTPException, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from datetime import date
+from datetime import datetime, date
+import asyncio
 from .models import ThreadPost, TagSummary, UserLoginRequest, UserProfile
 from .scraper import ThreadsScraper
 
 app = FastAPI(
     title="ThreadLens Intelligence API",
-    description="Backend API untuk Scraping dan Ranking Tren Threads dengan Role-based Access Control",
-    version="1.3.0"
+    description="Backend API untuk Scraping dan Ranking Tren Threads Real-time dengan Background Scraper",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -22,45 +23,63 @@ app.add_middleware(
 scraper = ThreadsScraper()
 
 # MASTER AKUN LOGIN & ROLES
-# 1. Super Admin: full access
-# 2. Admin: bisa tambah tagging & scrape
-# 3. User: hanya bisa melihat dan searching, tidak bisa tambah tagging
 ACCOUNTS_DB = {
     "superadmin": {"password": "password123", "role": "super_admin", "name": "Super Administrator"},
     "admin": {"password": "password123", "role": "admin", "name": "Operations Admin"},
     "user": {"password": "password123", "role": "user", "name": "Guest Analyst"}
 }
 
-# 20 Master Tags Terkurasi
-MASTER_TAGS: List[TagSummary] = [
-    TagSummary(rank=1, tag="coffee", label="coffee", icon="mdi-coffee", total_posts=1240, total_reach=1450000, total_comments=48200, growth="+34%"),
-    TagSummary(rank=2, tag="skincare", label="skincare", icon="mdi-sparkles", total_posts=980, total_reach=1290000, total_comments=56100, growth="+28%"),
-    TagSummary(rank=3, tag="kuliner", label="kuliner", icon="mdi-noodles", total_posts=1120, total_reach=980000, total_comments=39500, growth="+19%"),
-    TagSummary(rank=4, tag="startup", label="startup", icon="mdi-rocket-launch-outline", total_posts=640, total_reach=870000, total_comments=31200, growth="+12%"),
-    TagSummary(rank=5, tag="karir", label="karir", icon="mdi-briefcase-outline", total_posts=830, total_reach=820000, total_comments=42100, growth="+22%"),
-    TagSummary(rank=6, tag="finansial", label="finansial", icon="mdi-cash-multiple", total_posts=590, total_reach=790000, total_comments=28900, growth="+15%"),
-    TagSummary(rank=7, tag="gadget", label="gadget", icon="mdi-cellphone", total_posts=710, total_reach=750000, total_comments=24300, growth="+9%"),
-    TagSummary(rank=8, tag="kpop", label="kpop", icon="mdi-music-note", total_posts=1450, total_reach=710000, total_comments=68400, growth="+45%"),
-    TagSummary(rank=9, tag="properti", label="properti", icon="mdi-home-city-outline", total_posts=420, total_reach=680000, total_comments=18700, growth="+8%"),
-    TagSummary(rank=10, tag="otomotif", label="otomotif", icon="mdi-car-sports", total_posts=510, total_reach=640000, total_comments=19500, growth="+11%"),
-    TagSummary(rank=11, tag="film", label="film", icon="mdi-movie-open-outline", total_posts=890, total_reach=610000, total_comments=32000, growth="+17%"),
-    TagSummary(rank=12, tag="travel", label="travel", icon="mdi-airplane", total_posts=730, total_reach=580000, total_comments=21400, growth="+14%"),
-    TagSummary(rank=13, tag="fitness", label="fitness", icon="mdi-dumbbell", total_posts=490, total_reach=520000, total_comments=16800, growth="+10%"),
-    TagSummary(rank=14, tag="parenting", label="parenting", icon="mdi-baby-face-outline", total_posts=380, total_reach=490000, total_comments=22100, growth="+21%"),
-    TagSummary(rank=15, tag="ai", label="ai", icon="mdi-robot-outline", total_posts=620, total_reach=460000, total_comments=15900, growth="+31%"),
-    TagSummary(rank=16, tag="crypto", label="crypto", icon="mdi-bitcoin", total_posts=540, total_reach=430000, total_comments=14200, growth="+5%"),
-    TagSummary(rank=17, tag="buku", label="buku", icon="mdi-book-open-page-variant-outline", total_posts=310, total_reach=390000, total_comments=11400, growth="+13%"),
-    TagSummary(rank=18, tag="fashion", label="fashion", icon="mdi-tshirt-crew-outline", total_posts=680, total_reach=370000, total_comments=13900, growth="+18%"),
-    TagSummary(rank=19, tag="freelance", label="freelance", icon="mdi-laptop", total_posts=410, total_reach=340000, total_comments=17600, growth="+26%"),
-    TagSummary(rank=20, tag="gaming", label="gaming", icon="mdi-gamepad-variant-outline", total_posts=820, total_reach=310000, total_comments=19800, growth="+7%")
-]
+# MASTER TAGS: Dimulai KOSONG (Semua data sample dummy dibersihkan)
+# Tag hanya akan bertambah ketika Admin/Super Admin mendaftarkan kata kunci baru
+MASTER_TAGS: List[TagSummary] = []
+
+async def perform_background_scraping(clean_tag: str, country: str = "ID"):
+    """
+    Fungsi worker asinkron di latar belakang:
+    1. Membuka browser Playwright & memindai hasil pencarian Threads secara riil.
+    2. Menghitung akumulasi metrik nyata (total posts, total reach, total replies, total likes).
+    3. Mengupdate status TagSummary menjadi 'ready'.
+    """
+    tag_obj = next((t for t in MASTER_TAGS if t.tag == clean_tag), None)
+    if not tag_obj:
+        return
+
+    tag_obj.status = "scraping"
+    tag_obj.status_message = "Membuka browser & mengekstrak data langsung dari Threads..."
+
+    try:
+        posts = await scraper.scrape_by_tag(clean_tag, country=country, force_refresh=True)
+        if posts:
+            tag_obj.total_posts = len(posts)
+            tag_obj.total_reach = sum(p.metrics.reach for p in posts)
+            tag_obj.total_comments = sum(p.metrics.replies for p in posts)
+            tag_obj.total_likes = sum(p.metrics.likes for p in posts)
+            tag_obj.status = "ready"
+            tag_obj.status_message = f"Selesai ({len(posts)} postingan)"
+            tag_obj.last_scraped_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"[Worker] Scraping sukses untuk #{clean_tag}: {len(posts)} postingan asli terkumpul.")
+        else:
+            tag_obj.total_posts = 0
+            tag_obj.total_reach = 0
+            tag_obj.total_comments = 0
+            tag_obj.total_likes = 0
+            tag_obj.status = "ready"
+            tag_obj.status_message = "Tidak ada postingan publik ditemukan di Threads"
+            tag_obj.last_scraped_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"[Worker] Scraping selesai untuk #{clean_tag}, tetapi tidak ada postingan.")
+    except Exception as e:
+        print(f"[Worker Error] Scraping gagal untuk #{clean_tag}: {e}")
+        tag_obj.status = "failed"
+        tag_obj.status_message = f"Gagal: {str(e)[:50]}"
+        tag_obj.last_scraped_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 @app.get("/")
 def health_check():
     return {
         "status": "online",
-        "engine": "ThreadLens Python Scraper",
-        "version": "1.3.0"
+        "engine": "ThreadLens Real-time Asynchronous Scraper",
+        "version": "2.0.0",
+        "active_tags_count": len(MASTER_TAGS)
     }
 
 # ENDPOINT LOGIN
@@ -79,28 +98,28 @@ def login(payload: UserLoginRequest):
         }
     }
 
+# GET TAGS (Leaderboard Tagging)
 @app.get("/api/tags")
 def get_tags(
-    sort_by: str = Query("reach", description="Sort criteria: reach, comments, posts"),
-    page: int = Query(1, ge=1, description="Halaman paging tags (1, 2, dst)"),
-    page_size: int = Query(10, ge=1, le=50, description="Jumlah tag per halaman (default 10)")
+    sort_by: str = Query("reach", description="Sort criteria: reach, comments, posts, likes"),
+    page: int = Query(1, ge=1, description="Halaman paging tags"),
+    page_size: int = Query(10, ge=1, le=50, description="Jumlah tag per halaman")
 ):
-    """
-    Mengambil summary tags dengan Pagination (Next / Previous).
-    """
     sort_key = "total_reach"
     if sort_by == "comments":
         sort_key = "total_comments"
     elif sort_by == "posts":
         sort_key = "total_posts"
+    elif sort_by == "likes":
+        sort_key = "total_likes"
 
-    sorted_tags = sorted(MASTER_TAGS, key=lambda x: getattr(x, sort_key), reverse=True)
+    sorted_tags = sorted(MASTER_TAGS, key=lambda x: getattr(x, sort_key, 0), reverse=True)
     
     for idx, item in enumerate(sorted_tags):
         item.rank = idx + 1
 
     total_items = len(sorted_tags)
-    total_pages = (total_items + page_size - 1) // page_size
+    total_pages = max(1, (total_items + page_size - 1) // page_size) if total_items > 0 else 1
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
 
@@ -116,23 +135,61 @@ def get_tags(
         }
     }
 
+# GET STATUS TAG
+@app.get("/api/tags/status/{tag}")
+def get_tag_status(tag: str):
+    clean_tag = tag.replace("#", "").strip().lower()
+    tag_obj = next((t for t in MASTER_TAGS if t.tag == clean_tag), None)
+    if not tag_obj:
+        raise HTTPException(status_code=404, detail="Tag tidak ditemukan")
+    return tag_obj
+
+# GET POSTS (Tanpa filter tanggal yang membatasi, murni postingan riil teratas)
 @app.get("/api/posts")
 async def get_posts(
     tag: str = Query("coffee", description="Topik kata kunci"),
     country: str = Query("ID", description="Kode negara"),
-    target_date: Optional[str] = Query(None, description="Filter tanggal spesifik YYYY-MM-DD"),
     sort_by: str = Query("reach", description="Sort postingan: reach, replies, likes, newest"),
     page: int = Query(1, ge=1, description="Halaman paging posts"),
     page_size: int = Query(5, ge=5, le=50, description="Kelipatan postingan per halaman: 5, 10, 15, 20")
 ):
-    """
-    Mengambil postingan terfilter tanggal spesifik & paging.
-    Dapat diakses oleh semua role (Super Admin, Admin, dan User).
-    """
     clean_tag = tag.replace("#", "").strip().lower()
-    posts = await scraper.scrape_by_tag_and_date(
+    tag_obj = next((t for t in MASTER_TAGS if t.tag == clean_tag), None)
+
+    if not tag_obj:
+        return {
+            "tag": clean_tag,
+            "status": "not_found",
+            "status_message": f"Tag #{clean_tag} belum terdaftar.",
+            "items": [],
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": 0,
+                "total_pages": 1,
+                "has_next": False,
+                "has_prev": False
+            }
+        }
+
+    if tag_obj.status == "scraping":
+        return {
+            "tag": clean_tag,
+            "status": "scraping",
+            "status_message": tag_obj.status_message,
+            "items": [],
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": 0,
+                "total_pages": 1,
+                "has_next": False,
+                "has_prev": False
+            }
+        }
+
+    posts = await scraper.scrape_by_tag(
         tag=clean_tag,
-        target_date=target_date,
         country=country
     )
 
@@ -150,16 +207,10 @@ async def get_posts(
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
 
-    exact_matched = any(p.posted_date == target_date for p in posts) if target_date else True
-    filter_note = ""
-    if target_date and not exact_matched:
-        filter_note = f"Tidak ada postingan pada tanggal {target_date}. Menampilkan postingan terbaru yang tersedia untuk #{clean_tag}:"
-
     return {
         "tag": clean_tag,
-        "target_date": target_date or "",
-        "exact_date_matched": exact_matched,
-        "filter_note": filter_note,
+        "status": tag_obj.status,
+        "status_message": tag_obj.status_message,
         "items": posts[start_idx:end_idx],
         "pagination": {
             "page": page,
@@ -171,17 +222,13 @@ async def get_posts(
         }
     }
 
-# ROLE-BASED ACCESS CONTROL UNTUK TAMBAH TAGGING
+# POST REGISTER TAG DENGAN ASYNC BACKGROUND SCRAPER
 @app.post("/api/tags/register")
-def register_tag(
+async def register_tag(
     tag: str, 
     country: str = "ID",
     x_user_role: Optional[str] = Header(None, description="Role pengakses: super_admin, admin, user")
 ):
-    """
-    Hanya Super Admin & Admin yang berhak menambahkan tagging baru.
-    Role 'user' dilarang menambahkan tagging.
-    """
     if x_user_role == "user":
         raise HTTPException(
             status_code=403, 
@@ -189,6 +236,9 @@ def register_tag(
         )
 
     clean_tag = tag.replace("#", "").strip().lower()
+    if not clean_tag:
+        raise HTTPException(status_code=400, detail="Tag tidak boleh kosong")
+
     existing = next((t for t in MASTER_TAGS if t.tag == clean_tag), None)
     
     if not existing:
@@ -197,12 +247,75 @@ def register_tag(
             tag=clean_tag,
             label=clean_tag,
             icon="mdi-pound",
-            total_posts=180,
-            total_reach=380000,
-            total_comments=14500,
-            growth="+New"
+            total_posts=0,
+            total_reach=0,
+            total_comments=0,
+            total_likes=0,
+            growth="+New",
+            status="scraping",
+            status_message="Sedang memindai Threads di latar belakang...",
+            last_scraped_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         MASTER_TAGS.append(new_tag)
-        return {"status": "created", "tag": new_tag}
-        
-    return {"status": "exists", "tag": existing}
+
+        # Trigger Asynchronous Background Scraping secara instan tanpa memblokir response
+        asyncio.create_task(perform_background_scraping(clean_tag, country))
+
+        return {
+            "status": "queued",
+            "message": f"Tag #{clean_tag} berhasil ditambahkan dan proses background scraping telah dimulai.",
+            "tag": new_tag
+        }
+    else:
+        # Jika sudah ada tetapi statusnya belum ready atau ingin refresh
+        if existing.status != "scraping":
+            asyncio.create_task(perform_background_scraping(clean_tag, country))
+        return {
+            "status": "exists",
+            "message": f"Tag #{clean_tag} sudah terdaftar.",
+            "tag": existing
+        }
+
+# POST REFRESH SCRAPE TAG
+@app.post("/api/tags/refresh")
+async def refresh_tag_scrape(
+    tag: str,
+    country: str = "ID",
+    x_user_role: Optional[str] = Header(None)
+):
+    if x_user_role == "user":
+        raise HTTPException(status_code=403, detail="Role user tidak berhak merefresh scraping.")
+
+    clean_tag = tag.replace("#", "").strip().lower()
+    tag_obj = next((t for t in MASTER_TAGS if t.tag == clean_tag), None)
+    if not tag_obj:
+        raise HTTPException(status_code=404, detail="Tag tidak ditemukan")
+
+    tag_obj.status = "scraping"
+    tag_obj.status_message = "Sedang memperbarui data dari Threads..."
+    asyncio.create_task(perform_background_scraping(clean_tag, country))
+    return {"status": "queued", "tag": tag_obj}
+
+# DELETE TAG
+@app.delete("/api/tags/{tag}")
+def delete_tag(
+    tag: str,
+    x_user_role: Optional[str] = Header(None)
+):
+    if x_user_role not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Hanya Admin dan Super Admin yang dapat menghapus tag.")
+
+    clean_tag = tag.replace("#", "").strip().lower()
+    global MASTER_TAGS
+    before_count = len(MASTER_TAGS)
+    MASTER_TAGS = [t for t in MASTER_TAGS if t.tag != clean_tag]
+    
+    if len(MASTER_TAGS) == before_count:
+        raise HTTPException(status_code=404, detail=f"Tag #{clean_tag} tidak ditemukan.")
+
+    from .scraper import REAL_POSTS_CACHE
+    for k in list(REAL_POSTS_CACHE.keys()):
+        if k.startswith(f"{clean_tag}_"):
+            del REAL_POSTS_CACHE[k]
+
+    return {"status": "deleted", "message": f"Tag #{clean_tag} berhasil dihapus."}
