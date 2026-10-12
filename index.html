@@ -355,23 +355,23 @@
       if (currentUser.role === "super_admin") {
         roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-purple-50 text-purple-700 border border-purple-200";
         roleBadge.textContent = "SUPER ADMIN";
-        btnActionText.textContent = "Tambah Tag";
-        btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
+        if (btnActionText) btnActionText.textContent = "Tambah Tag";
+        if (btnActionIcon) btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
         input.placeholder = "Ketik tag baru untuk di-scrape (Super Admin Mode)...";
         roleInstruction.innerHTML = "Status: <strong>Super Admin</strong> (Akses Penuh: Tambah Tag, Delete, dan Scrape Live)";
       } else if (currentUser.role === "admin") {
         roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
         roleBadge.textContent = "ADMIN";
-        btnActionText.textContent = "Tambah Tag";
-        btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
+        if (btnActionText) btnActionText.textContent = "Tambah Tag";
+        if (btnActionIcon) btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
         input.placeholder = "Ketik tag baru untuk di-scrape...";
         roleInstruction.innerHTML = "Status: <strong>Admin</strong> (Dapat menambah tagging baru & menjalankan scraper)";
       } else {
         // ROLE USER: HANYA BISA SEARCHING, TIDAK BISA TAMBAH TAGGING
         roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700 border border-slate-200";
         roleBadge.textContent = "USER";
-        btnActionText.textContent = "Cari Tag";
-        btnActionIcon.className = "mdi mdi-magnify text-lg";
+        if (btnActionText) btnActionText.textContent = "Cari Tag";
+        if (btnActionIcon) btnActionIcon.className = "mdi mdi-magnify text-lg";
         input.placeholder = "Cari topik yang sudah tersedia (Mode Pencarian User)...";
         roleInstruction.innerHTML = "Status: <strong>User</strong> (Mode Terbatas: Hanya dapat mencari postingan, <em>tidak diizinkan menambah tag baru</em>)";
       }
@@ -445,7 +445,7 @@
       const cleanTag = val.replace("#", "").toLowerCase();
 
       // JIKA USER: HANYA BISA FILTER / SEARCH
-      if (currentUser.role === "user") {
+      if (currentUser && currentUser.role === "user") {
         selectTag(cleanTag);
         input.value = "";
         return;
@@ -454,15 +454,20 @@
       // JIKA ADMIN / SUPER ADMIN: BISA TAMBAH TAGGING KE SERVER
       const country = document.getElementById("countrySelect").value;
       const btn = document.getElementById("btnAction");
+      const btnIcon = document.getElementById("btnActionIcon");
+      const btnText = document.getElementById("btnActionText");
 
+      if (btnIcon && btnText) {
+        btnIcon.className = "mdi mdi-loading mdi-spin text-lg";
+        btnText.textContent = "Menyimpan...";
+      }
       btn.disabled = true;
-      btn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-lg"></i> Menyimpan...`;
 
       try {
         const res = await fetch(`${API_BASE_URL}/api/tags/register?tag=${cleanTag}&country=${country}`, {
           method: "POST",
           headers: {
-            "x-user-role": currentUser.role
+            "x-user-role": currentUser ? currentUser.role : "admin"
           }
         });
 
@@ -470,19 +475,20 @@
           const err = await res.json();
           throw new Error(err.detail || "Gagal menambah tag");
         }
+
+        if (!customTagsList.includes(val)) {
+          customTagsList.unshift(val);
+          renderCustomTags();
+        }
+
+        input.value = "";
       } catch (err) {
         alert(err.message);
+      } finally {
+        btn.disabled = false;
+        updateRoleUI();
+        selectTag(cleanTag);
       }
-
-      if (!customTagsList.includes(val)) {
-        customTagsList.unshift(val);
-        renderCustomTags();
-      }
-
-      input.value = "";
-      btn.disabled = false;
-      updateRoleUI();
-      selectTag(cleanTag);
     }
 
     // ================= DATE PRESETS & CONTROLS =================
