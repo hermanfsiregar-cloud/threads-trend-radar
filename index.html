@@ -28,34 +28,23 @@
 </head>
 <body class="bg-[#F8FAFC] text-[#0F172A] antialiased min-h-screen p-4 md:p-8">
 
-  <!-- ================= MODAL LOGIN MASTER ================= -->
-  <div id="loginModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in duration-200">
+  <!-- ================= SCREEN LOGIN MASTER ================= -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6 animate-in fade-in zoom-in duration-200">
       <div class="text-center space-y-1.5">
         <div class="w-12 h-12 rounded-2xl bg-[#4F46E5] text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-100 mb-2">
           <i class="mdi mdi-shield-account text-2xl"></i>
         </div>
         <h2 class="text-xl font-bold text-slate-900">ThreadLens Access Control</h2>
-        <p class="text-xs text-[#475569]">Masuk untuk mengaktifkan izin peran Anda</p>
+        <p class="text-xs text-[#475569]">Silakan masuk dengan akun Anda untuk mengakses sistem</p>
       </div>
 
-      <!-- Quick Preset Buttons -->
-      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2">
-        <span class="text-[11px] font-semibold text-slate-600 block">Pilih Akun Uji Coba:</span>
-        <div class="grid grid-cols-3 gap-1.5 text-xs">
-          <button onclick="fillLoginPreset('superadmin')" class="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] font-semibold text-indigo-600 shadow-sm transition">Super Admin</button>
-          <button onclick="fillLoginPreset('admin')" class="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] font-semibold text-emerald-600 shadow-sm transition">Admin</button>
-          <button onclick="fillLoginPreset('user')" class="py-1.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] font-semibold text-slate-600 shadow-sm transition">User</button>
-        </div>
-        <p class="text-[10px] text-slate-400 text-center italic">*Semua password default: password123</p>
-      </div>
-
-      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-3.5">
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4">
         <div>
           <label class="text-xs font-semibold text-slate-700 block mb-1">Username</label>
           <div class="relative">
             <i class="mdi mdi-account text-slate-400 absolute left-3.5 top-2.5 text-base"></i>
-            <input type="text" id="loginUsername" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" placeholder="superadmin / admin / user">
+            <input type="text" id="loginUsername" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition" placeholder="Masukkan username">
           </div>
         </div>
 
@@ -63,7 +52,7 @@
           <label class="text-xs font-semibold text-slate-700 block mb-1">Password</label>
           <div class="relative">
             <i class="mdi mdi-lock text-slate-400 absolute left-3.5 top-2.5 text-base"></i>
-            <input type="password" id="loginPassword" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" placeholder="••••••••">
+            <input type="password" id="loginPassword" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition" placeholder="Masukkan password">
           </div>
         </div>
 
@@ -76,7 +65,7 @@
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto space-y-6">
+  <div id="mainDashboard" class="max-w-7xl mx-auto space-y-6 hidden">
 
     <!-- Top Header -->
     <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -97,19 +86,25 @@
 
       <!-- Action Utilities & User Profile Bar -->
       <div class="flex flex-wrap items-center gap-2.5">
-        <!-- Active User Badge -->
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
-          <div class="w-7 h-7 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center font-bold text-xs" id="userAvatarChar">
-            U
+        <!-- Active User Info & Role Text Label -->
+        <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="w-8 h-8 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center font-bold text-xs" id="userAvatarChar">
+            -
           </div>
           <div class="text-left">
-            <div class="text-xs font-bold text-slate-900 leading-tight" id="userNameLabel">Guest User</div>
-            <span class="text-[10px] font-semibold px-1.5 py-0.2 rounded font-mono" id="userRoleBadge">ROLE: USER</span>
+            <div class="text-xs font-bold text-slate-900 leading-tight" id="userNameLabel">-</div>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="text-[10px] text-slate-400">Role:</span>
+              <span class="text-[10px] font-semibold px-2 py-0.2 rounded font-mono" id="userRoleBadge">-</span>
+            </div>
           </div>
-          <button onclick="openLoginModal()" class="ml-1 text-slate-400 hover:text-[#4F46E5]" title="Ganti Akun / Role">
-            <i class="mdi mdi-swap-horizontal text-lg"></i>
-          </button>
         </div>
+
+        <!-- Tombol Logout -->
+        <button onclick="handleLogout()" class="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-rose-700 flex items-center gap-1.5 transition shadow-sm" title="Keluar dari sistem">
+          <i class="mdi mdi-logout text-sm text-rose-600"></i>
+          Logout
+        </button>
 
         <button onclick="exportData('csv')" class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-[#475569] flex items-center gap-1.5 transition shadow-sm">
           <i class="mdi mdi-file-delimited-outline text-base text-emerald-600"></i>
@@ -318,12 +313,8 @@
   <script>
     const API_BASE_URL = "http://127.0.0.1:8000";
 
-    // MASTER USER SESSION (Default: Admin)
-    let currentUser = JSON.parse(localStorage.getItem("threadlens_user") || JSON.stringify({
-      username: "admin",
-      role: "admin",
-      name: "Operations Admin"
-    }));
+    // MASTER USER SESSION (Tidak ada auto-login, wajib login terlebih dahulu)
+    let currentUser = null;
 
     // State Management
     let currentTagPage = 1;
@@ -349,6 +340,8 @@
 
     // ================= RBAC & AUTHENTICATION =================
     function updateRoleUI() {
+      if (!currentUser) return;
+
       document.getElementById("userNameLabel").textContent = currentUser.name;
       const roleBadge = document.getElementById("userRoleBadge");
       const avatarChar = document.getElementById("userAvatarChar");
@@ -376,7 +369,7 @@
       } else {
         // ROLE USER: HANYA BISA SEARCHING, TIDAK BISA TAMBAH TAGGING
         roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700 border border-slate-200";
-        roleBadge.textContent = "USER (READ-ONLY)";
+        roleBadge.textContent = "USER";
         btnActionText.textContent = "Cari Tag";
         btnActionIcon.className = "mdi mdi-magnify text-lg";
         input.placeholder = "Cari topik yang sudah tersedia (Mode Pencarian User)...";
@@ -384,17 +377,19 @@
       }
     }
 
-    function openLoginModal() {
-      document.getElementById("loginModal").classList.remove("hidden");
+    function showLoginScreen() {
+      currentUser = null;
+      document.getElementById("mainDashboard").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("loginUsername").value = "";
+      document.getElementById("loginPassword").value = "";
+      const errBox = document.getElementById("loginError");
+      if (errBox) errBox.classList.add("hidden");
     }
 
-    function closeLoginModal() {
-      document.getElementById("loginModal").classList.add("hidden");
-    }
-
-    function fillLoginPreset(username) {
-      document.getElementById("loginUsername").value = username;
-      document.getElementById("loginPassword").value = "password123";
+    function handleLogout() {
+      localStorage.removeItem("threadlens_user");
+      showLoginScreen();
     }
 
     async function handleLoginSubmit(e) {
@@ -402,7 +397,11 @@
       const u = document.getElementById("loginUsername").value.trim();
       const p = document.getElementById("loginPassword").value;
       const errBox = document.getElementById("loginError");
+      const submitBtn = document.getElementById("btnLoginSubmit");
       errBox.classList.add("hidden");
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-base"></i> <span>Memproses...</span>`;
 
       try {
         const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -413,18 +412,27 @@
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.detail || "Login gagal");
+          throw new Error(err.detail || "Username atau password salah");
         }
 
         const data = await res.json();
         currentUser = data.user;
         localStorage.setItem("threadlens_user", JSON.stringify(currentUser));
-        closeLoginModal();
+        
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("mainDashboard").classList.remove("hidden");
+        
         updateRoleUI();
-        alert(`Berhasil masuk sebagai ${currentUser.name} (${currentUser.role})`);
+        checkBackendStatus();
+        renderCustomTags();
+        fetchTags(1);
+        fetchPosts(1);
       } catch (err) {
         errBox.textContent = err.message;
         errBox.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Masuk Sistem</span> <i class="mdi mdi-arrow-right text-base"></i>`;
       }
     }
 
@@ -834,12 +842,24 @@
       downloadAnchor.remove();
     }
 
-    // Inisialisasi Sistem
-    updateRoleUI();
-    checkBackendStatus();
-    renderCustomTags();
-    fetchTags(1);
-    fetchPosts(1);
+    // Inisialisasi Sistem: Wajib Sesi Login
+    const savedUser = localStorage.getItem("threadlens_user");
+    if (savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("mainDashboard").classList.remove("hidden");
+        updateRoleUI();
+        checkBackendStatus();
+        renderCustomTags();
+        fetchTags(1);
+        fetchPosts(1);
+      } catch (err) {
+        showLoginScreen();
+      }
+    } else {
+      showLoginScreen();
+    }
   </script>
 </body>
 </html>
