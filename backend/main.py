@@ -144,14 +144,16 @@ def get_tag_status(tag: str):
         raise HTTPException(status_code=404, detail="Tag tidak ditemukan")
     return tag_obj
 
-# GET POSTS (Tanpa filter tanggal yang membatasi, murni postingan riil teratas)
+# GET POSTS (Mendukung semua jenis sorting metrik)
 @app.get("/api/posts")
 async def get_posts(
     tag: str = Query("coffee", description="Topik kata kunci"),
     country: str = Query("ID", description="Kode negara"),
-    sort_by: str = Query("reach", description="Sort postingan: reach, replies, likes, newest"),
+    sort_by: str = Query("likes", description="Sort postingan: likes, replies, reposts, quotes, shares, reach, newest"),
+    target_date: Optional[str] = Query(None, description="Filter tanggal postingan YYYY-MM-DD (opsional)"),
+    limit: int = Query(20, ge=1, le=50, description="Jumlah maksimal hasil (default 20)"),
     page: int = Query(1, ge=1, description="Halaman paging posts"),
-    page_size: int = Query(5, ge=5, le=50, description="Kelipatan postingan per halaman: 5, 10, 15, 20")
+    page_size: int = Query(20, ge=1, le=50, description="Jumlah postingan per halaman")
 ):
     clean_tag = tag.replace("#", "").strip().lower()
     tag_obj = next((t for t in MASTER_TAGS if t.tag == clean_tag), None)
@@ -193,14 +195,29 @@ async def get_posts(
         country=country
     )
 
+    # Filter berdasarkan tanggal jika dipilih user
+    if target_date and target_date.strip():
+        req_date = target_date.strip()
+        posts = [p for p in posts if p.posted_date == req_date]
+
+    # Sorting berdasarkan metrik yang dipilih user
     if sort_by == "replies":
         posts.sort(key=lambda p: p.metrics.replies, reverse=True)
     elif sort_by == "likes":
         posts.sort(key=lambda p: p.metrics.likes, reverse=True)
+    elif sort_by == "reposts":
+        posts.sort(key=lambda p: p.metrics.reposts, reverse=True)
+    elif sort_by == "quotes":
+        posts.sort(key=lambda p: getattr(p.metrics, "quotes", 0), reverse=True)
+    elif sort_by == "shares":
+        posts.sort(key=lambda p: p.metrics.shares, reverse=True)
     elif sort_by == "newest":
         posts.sort(key=lambda p: p.posted_date, reverse=True)
     else:
-        posts.sort(key=lambda p: p.metrics.reach, reverse=True)
+        posts.sort(key=lambda p: p.metrics.likes, reverse=True)
+
+    # Limit hasil ke top-N (default 20)
+    posts = posts[:limit]
 
     total_items = len(posts)
     total_pages = max(1, (total_items + page_size - 1) // page_size)
@@ -211,6 +228,7 @@ async def get_posts(
         "tag": clean_tag,
         "status": tag_obj.status,
         "status_message": tag_obj.status_message,
+        "sort_by": sort_by,
         "items": posts[start_idx:end_idx],
         "pagination": {
             "page": page,

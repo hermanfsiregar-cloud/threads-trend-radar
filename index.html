@@ -3,34 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Threads Trend Hunter & Scraper Hub</title>
-  
-  <!-- Font Poppins -->
+  <title>ThreadLens — Threads Trend Hunter & Scraper Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Material Design Icons (MDI) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-  
-  <!-- Tailwind CSS -->
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
-
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-    }
-    
+    body { font-family: 'Poppins', sans-serif; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    .tab-active { background: #4F46E5; color: white; }
+    .tab-inactive { background: white; color: #475569; border: 1px solid #E2E8F0; }
+    .tab-inactive:hover { background: #F1F5F9; }
   </style>
 </head>
 <body class="bg-[#F8FAFC] text-[#0F172A] antialiased min-h-screen p-4 md:p-8">
 
-  <!-- ================= SCREEN LOGIN MASTER ================= -->
+  <!-- ================= LOGIN SCREEN ================= -->
   <div id="loginScreen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6 animate-in fade-in zoom-in duration-200">
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
       <div class="text-center space-y-1.5">
         <div class="w-12 h-12 rounded-2xl bg-[#4F46E5] text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-100 mb-2">
           <i class="mdi mdi-shield-account text-2xl"></i>
@@ -38,8 +31,7 @@
         <h2 class="text-xl font-bold text-slate-900">ThreadLens Access Control</h2>
         <p class="text-xs text-[#475569]">Silakan masuk dengan akun Anda untuk mengakses sistem</p>
       </div>
-
-      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="text-xs font-semibold text-slate-700 block mb-1">Username</label>
           <div class="relative">
@@ -47,7 +39,6 @@
             <input type="text" id="loginUsername" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition" placeholder="Masukkan username">
           </div>
         </div>
-
         <div>
           <label class="text-xs font-semibold text-slate-700 block mb-1">Password</label>
           <div class="relative">
@@ -55,9 +46,7 @@
             <input type="password" id="loginPassword" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition" placeholder="Masukkan password">
           </div>
         </div>
-
         <div id="loginError" class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200 hidden"></div>
-
         <button type="submit" id="btnLoginSubmit" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-semibold text-sm transition shadow-lg shadow-indigo-100 flex items-center justify-center gap-1.5">
           <span>Masuk Sistem</span> <i class="mdi mdi-arrow-right text-base"></i>
         </button>
@@ -65,237 +54,180 @@
     </div>
   </div>
 
-  <div id="mainDashboard" class="max-w-7xl mx-auto space-y-6 hidden">
+  <!-- ================= MAIN DASHBOARD ================= -->
+  <div id="mainDashboard" class="max-w-6xl mx-auto space-y-6 hidden">
 
-    <!-- Top Header -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-      <div class="flex items-center gap-3.5">
-        <div class="w-12 h-12 rounded-2xl bg-[#4F46E5] text-white flex items-center justify-center shadow-md shadow-indigo-100">
-          <i class="mdi mdi-chart-timeline-variant text-2xl"></i>
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-[#4F46E5] text-white flex items-center justify-center shadow-md shadow-indigo-100">
+          <i class="mdi mdi-chart-timeline-variant text-xl"></i>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900">ThreadLens Market Radar</h1>
-            <span id="backendBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border border-slate-200 flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-slate-400"></span> Memeriksa Backend...
+            <h1 class="text-lg md:text-xl font-bold tracking-tight text-slate-900">ThreadLens</h1>
+            <span id="backendBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold border border-slate-200 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Cek...
             </span>
           </div>
-          <p class="text-xs text-[#475569] mt-0.5">Analisis tren topik Threads: Real deep scraping, permalink asli, dan kontrol hak akses bertingkat.</p>
+          <p class="text-[11px] text-[#475569]">Threads Trend Hunter & Scraper Hub</p>
         </div>
       </div>
-
-      <!-- Action Utilities & User Profile Bar -->
-      <div class="flex flex-wrap items-center gap-2.5">
-        <!-- Active User Info & Role Text Label -->
-        <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
-          <div class="w-8 h-8 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center font-bold text-xs" id="userAvatarChar">
-            -
-          </div>
+      <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="w-7 h-7 rounded-lg bg-indigo-100 text-[#4F46E5] flex items-center justify-center font-bold text-xs" id="userAvatar">-</div>
           <div class="text-left">
-            <div class="text-xs font-bold text-slate-900 leading-tight" id="userNameLabel">-</div>
-            <div class="flex items-center gap-1 mt-0.5">
-              <span class="text-[10px] text-slate-400">Role:</span>
-              <span class="text-[10px] font-semibold px-2 py-0.2 rounded font-mono" id="userRoleBadge">-</span>
-            </div>
+            <div class="text-[11px] font-bold text-slate-900 leading-tight" id="userName">-</div>
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono" id="userRole">-</span>
           </div>
         </div>
-
-        <!-- Tombol Logout -->
-        <button onclick="handleLogout()" class="px-3.5 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-rose-700 flex items-center gap-1.5 transition shadow-sm" title="Keluar dari sistem">
-          <i class="mdi mdi-logout text-sm text-rose-600"></i>
-          Logout
-        </button>
-
-        <button onclick="exportData('csv')" class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-[#475569] flex items-center gap-1.5 transition shadow-sm">
-          <i class="mdi mdi-file-delimited-outline text-base text-emerald-600"></i>
-          CSV
-        </button>
-        <button onclick="exportData('json')" class="px-4 py-2 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-indigo-200">
-          <i class="mdi mdi-code-json text-base"></i>
-          JSON
+        <button onclick="handleLogout()" class="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-rose-700 flex items-center gap-1 transition" title="Logout">
+          <i class="mdi mdi-logout text-sm"></i> Logout
         </button>
       </div>
     </header>
 
-    <!-- Section 1: Input Scraping Mandiri & Country Filter (Filter Tanggal Dihilangkan Sesuai Request) -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+    <!-- ===== TAB NAVIGATION ===== -->
+    <div class="flex gap-2">
+      <button onclick="switchTab('register')" id="tabRegister" class="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition tab-active">
+        <i class="mdi mdi-tag-plus-outline text-base"></i> Kelola Tagging
+      </button>
+      <button onclick="switchTab('search')" id="tabSearch" class="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition tab-inactive">
+        <i class="mdi mdi-magnify text-base"></i> Cari Postingan
+      </button>
+    </div>
+
+    <!-- ===== TAB 1: KELOLA TAGGING (Tambah Tag Tanpa Filter Tanggal) ===== -->
+    <div id="panelRegister" class="space-y-5">
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
         <div>
           <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <i class="mdi mdi-magnify-plus-outline text-[#4F46E5] text-lg"></i>
-            Pencarian & Penambahan Tagging
+            <i class="mdi mdi-tag-plus-outline text-[#4F46E5] text-lg"></i>
+            Tambah Tagging Baru
           </h2>
-          <p class="text-xs text-[#475569]">
-            <span id="roleInstructionText">Role <strong>Admin / Super Admin</strong> dapat mendaftarkan tag baru. Role <strong>User</strong> hanya dapat mencari.</span>
+          <p class="text-xs text-[#475569] mt-0.5" id="registerHint">
+            Admin & Super Admin dapat mendaftarkan kata kunci/tagging baru (tanpa tanggal). Data akan di-scrape langsung dari Threads secara asinkron di latar belakang.
           </p>
         </div>
-        <div class="flex items-center gap-2 text-xs">
-          <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 flex items-center gap-1.5">
-            <i class="mdi mdi-lightning-bolt text-indigo-600"></i>
-            Asynchronous Background Scraper Active
-          </span>
-        </div>
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <!-- Tagging / Search Input -->
-        <div class="md:col-span-7 relative">
-          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <i class="mdi mdi-pound text-lg text-[#4F46E5]"></i>
+        <div class="flex gap-3">
+          <div class="flex-1 relative">
+            <i class="mdi mdi-pound text-lg text-[#4F46E5] absolute left-3.5 top-2.5 pointer-events-none"></i>
+            <input type="text" id="newTagInput" placeholder="Ketik kata kunci baru (misal: coffee, kuliner, mandalika)..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition"
+              onkeypress="if(event.key==='Enter') registerTag()" />
           </div>
-          <input 
-            type="text" 
-            id="customTagInput" 
-            placeholder="Ketik tag baru untuk di-scrape (misal: coffee, kuliner, v60)..." 
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white text-slate-900 transition"
-            onkeypress="if(event.key==='Enter') handleActionTrigger()"
-          />
-        </div>
-
-        <!-- Country Filter -->
-        <div class="md:col-span-3 relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <i class="mdi mdi-earth text-lg text-[#475569]"></i>
-          </div>
-          <select id="countrySelect" onchange="if(activeTag) fetchPosts(1)" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
-            <option value="ID" selected>🇮🇩 Indonesia (ID)</option>
-            <option value="GLOBAL">🌐 Global (Semua Wilayah)</option>
-            <option value="MY">🇲🇾 Malaysia (MY)</option>
-            <option value="SG">🇸🇬 Singapore (SG)</option>
-            <option value="US">🇺🇸 United States (US)</option>
-          </select>
-          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-            <i class="mdi mdi-chevron-down text-base"></i>
-          </div>
-        </div>
-
-        <!-- Dynamic Action Button based on Role -->
-        <div class="md:col-span-2">
-          <button id="btnAction" onclick="handleActionTrigger()" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-sm shadow-indigo-100">
-            <i id="btnActionIcon" class="mdi mdi-tag-plus-outline text-lg"></i>
-            <span id="btnActionText">Tambah Tag</span>
+          <button id="btnRegister" onclick="registerTag()" class="px-6 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center gap-1.5 transition shadow-sm shadow-indigo-100 whitespace-nowrap">
+            <i id="btnRegisterIcon" class="mdi mdi-plus-circle-outline text-lg"></i>
+            <span id="btnRegisterText">Tambah Tag</span>
           </button>
         </div>
       </div>
 
-      <!-- Quick Tag Library Bar (Muncul jika ada tag terdaftar) -->
-      <div id="quickTagsWrapper" class="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs border-t border-slate-100 hidden">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-[#475569] font-medium flex items-center gap-1">
-            <i class="mdi mdi-history text-slate-400"></i> Tag Terdaftar:
-          </span>
-          <div id="activeTagsContainer" class="flex flex-wrap gap-1.5">
-            <!-- Rendered via JS -->
-          </div>
+      <!-- Daftar Tag Terdaftar -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="mdi mdi-format-list-bulleted text-[#4F46E5] text-lg"></i>
+            Daftar Tagging Terdaftar
+          </h2>
+          <span id="tagCountBadge" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-mono font-semibold border border-slate-200">0 tag</span>
+        </div>
+        <div id="registeredTagsList" class="space-y-2">
+          <!-- Rendered by JS -->
         </div>
       </div>
     </div>
 
-    <!-- Section 2: Summary Leaderboard Tagging Threads (Dengan Pagination 10 per halaman) -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+    <!-- ===== TAB 2: CARI POSTINGAN (Tagging, Tanggal, Base On: Komentar, Like, Repost, Quote, Send To) ===== -->
+    <div id="panelSearch" class="space-y-5 hidden">
+
+      <!-- Search Form -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
         <div>
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-[#F59E0B] flex items-center justify-center font-bold">
-              <i class="mdi mdi-trending-up text-lg"></i>
+          <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="mdi mdi-magnify text-[#4F46E5] text-lg"></i>
+            Pencarian Postingan Berdasarkan Tagging
+          </h2>
+          <p class="text-xs text-[#475569] mt-0.5">Pilih tagging terdaftar, tentukan tanggal (opsional), dan pilih metrik untuk menampilkan 20 postingan tertinggi.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <!-- 1. Pilih Tagging Terdaftar -->
+          <div class="md:col-span-4">
+            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Tagging Terdaftar</label>
+            <div class="relative">
+              <i class="mdi mdi-pound text-[#4F46E5] absolute left-3 top-2.5 pointer-events-none"></i>
+              <select id="searchTag" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+                <option value="">-- Pilih Tagging --</option>
+              </select>
+              <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
             </div>
-            <h2 class="text-base font-bold text-slate-900">Top Trending Tagging Threads</h2>
-          </div>
-          <p class="text-xs text-[#475569] mt-0.5">
-            Menampilkan ringkasan metrik nyata dari Threads. Diurutkan berdasarkan <strong><span id="currentSortLabel">Total Est. Reach</span></strong>.
-          </p>
-        </div>
-        
-        <!-- Controls: Sort Criteria & Tag Pagination -->
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
-            <button onclick="changeSortCriteria('reach')" id="btnSortTagReach" class="px-3 py-1.5 rounded-lg font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1">
-              <i class="mdi mdi-fire text-sm text-[#F59E0B]"></i> Reach
-            </button>
-            <button onclick="changeSortCriteria('comments')" id="btnSortTagComments" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
-              <i class="mdi mdi-comment-multiple-outline text-sm"></i> Komentar
-            </button>
-            <button onclick="changeSortCriteria('likes')" id="btnSortTagLikes" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
-              <i class="mdi mdi-heart-outline text-sm"></i> Likes
-            </button>
-            <button onclick="changeSortCriteria('posts')" id="btnSortTagPosts" class="px-3 py-1.5 rounded-lg font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1">
-              <i class="mdi mdi-post-outline text-sm"></i> Jml Post
-            </button>
           </div>
 
-          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
-            <button onclick="prevTagPage()" id="btnPrevTags" class="px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
-              <i class="mdi mdi-chevron-left text-sm"></i> Prev
+          <!-- 2. Pilih Tanggal Berapa (Date Picker Opsional) -->
+          <div class="md:col-span-3">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-[11px] font-semibold text-slate-700 block">Tanggal Postingan</label>
+              <button type="button" onclick="document.getElementById('searchDate').value=''" class="text-[10px] text-indigo-600 hover:underline">Semua Tanggal</button>
+            </div>
+            <div class="relative">
+              <input type="date" id="searchDate" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition" />
+            </div>
+          </div>
+
+          <!-- 3. Base On (Select Data: Komentar, Like, Repost, Quote, Send To) -->
+          <div class="md:col-span-3">
+            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Base On (Urutkan)</label>
+            <div class="relative">
+              <i class="mdi mdi-sort-descending text-amber-600 absolute left-3 top-2.5 pointer-events-none"></i>
+              <select id="searchMetric" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none font-medium">
+                <option value="likes" selected>❤️ Like Tertinggi</option>
+                <option value="replies">💬 Komentar Tertinggi</option>
+                <option value="reposts">🔄 Repost Tertinggi</option>
+                <option value="quotes">💭 Quote Tertinggi</option>
+                <option value="shares">📤 Send To Tertinggi</option>
+              </select>
+              <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <!-- 4. Tombol Search -->
+          <div class="md:col-span-2 flex items-end">
+            <button id="btnSearch" onclick="executeSearch()" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-sm shadow-indigo-100">
+              <i id="btnSearchIcon" class="mdi mdi-magnify text-lg"></i>
+              <span id="btnSearchText">Tampilkan</span>
             </button>
-            <span id="tagPageInfo" class="px-2 text-[11px] font-mono font-semibold text-slate-700">Hal 1 / 1</span>
-            <button onclick="nextTagPage()" id="btnNextTags" class="px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
-              Next <i class="mdi mdi-chevron-right text-sm"></i>
-            </button>
           </div>
-        </div>
-      </div>
-
-      <!-- Grid Leaderboard Tags (10 Cards per Page) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="top20TagsGrid">
-        <!-- Rendered by JS / Skeleton -->
-      </div>
-    </div>
-
-    <!-- Section 3: Detail Hasil Scraping Postingan Threads (Dengan Paging Kelipatan 5) -->
-    <div class="space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-            <i class="mdi mdi-card-text-outline text-[#4F46E5] text-xl"></i>
-            Daftar Postingan Terfilter: <span id="currentFilterTagTitle" class="text-[#4F46E5] font-mono">-</span>
-          </h2>
-          <p class="text-xs text-[#475569]" id="resultSubtitle">Menampilkan postingan dengan interaksi dan jangkauan nyata dari Threads</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div class="flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl shadow-sm text-xs">
-            <span class="text-[#475569]">Tampilkan:</span>
-            <select id="postPageSizeSelect" onchange="onPostPageSizeChange()" class="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer">
-              <option value="5" selected>5 Post</option>
-              <option value="10">10 Post</option>
-              <option value="15">15 Post</option>
-              <option value="20">20 Post</option>
-            </select>
-          </div>
-
-          <div class="relative">
-            <select id="postSortFilter" onchange="fetchPosts(1)" class="pl-8 pr-7 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] appearance-none shadow-sm">
-              <option value="reach" selected>🔥 Tertinggi Est. Reach</option>
-              <option value="replies">💬 Tertinggi Komentar (Replies)</option>
-              <option value="likes">❤️ Tertinggi Likes</option>
-              <option value="newest">🕒 Urutan Terbaru</option>
-            </select>
-            <i class="mdi mdi-sort absolute left-2.5 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
-            <i class="mdi mdi-chevron-down absolute right-2 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
-          </div>
-
-          <span class="text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 text-[#475569] font-medium shadow-sm flex items-center gap-1" id="postCountBadge">
-            <i class="mdi mdi-database text-xs text-[#4F46E5]"></i> 0 Postingan
-          </span>
         </div>
       </div>
 
-      <!-- Post Cards Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="postsGrid">
-        <!-- Rendered by JS -->
-      </div>
+      <!-- Hasil Pencarian: 20 Tertinggi (Klik Card Auto Direct ke Threads) -->
+      <div id="searchResultsSection" class="space-y-4 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i class="mdi mdi-trophy-outline text-[#F59E0B] text-lg"></i>
+              Top 20 Postingan: <span id="resultTagLabel" class="text-[#4F46E5] font-mono">#tag</span>
+              <span id="resultMetricLabel" class="text-xs font-normal text-slate-500 ml-1">berdasarkan Like</span>
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              <span id="resultDateFilterNote" class="font-medium text-slate-700">Semua Tanggal</span> • Klik kartu postingan mana saja untuk membuka langsung di Threads.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportData('csv')" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-[#475569] flex items-center gap-1 transition">
+              <i class="mdi mdi-file-delimited-outline text-emerald-600"></i> CSV
+            </button>
+            <button onclick="exportData('json')" class="px-3 py-1.5 rounded-lg bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-semibold flex items-center gap-1 transition">
+              <i class="mdi mdi-code-json"></i> JSON
+            </button>
+          </div>
+        </div>
 
-      <!-- Pagination Footer for Posts (Next / Previous) -->
-      <div class="flex items-center justify-between bg-white border border-slate-200 rounded-2xl px-5 py-3.5 shadow-sm text-xs text-[#475569]">
-        <div id="postsPagingInfo">Menampilkan 0 postingan</div>
-        <div class="flex items-center gap-2">
-          <button onclick="prevPostPage()" id="btnPrevPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
-            <i class="mdi mdi-chevron-left text-sm"></i> Sebelumnya
-          </button>
-          <span id="postPageIndicator" class="font-mono font-semibold text-slate-800 px-2">Hal 1 / 1</span>
-          <button onclick="nextPostPage()" id="btnNextPosts" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1" disabled>
-            Selanjutnya <i class="mdi mdi-chevron-right text-sm"></i>
-          </button>
+        <!-- Post Cards Grid (Auto Direct onClick) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="postsGrid">
+          <!-- Rendered by JS -->
         </div>
       </div>
     </div>
@@ -303,712 +235,465 @@
   </div>
 
   <script>
-    const API_BASE_URL = "http://127.0.0.1:8000";
-
-    // MASTER USER SESSION (Wajib login terlebih dahulu)
+    const API = "http://127.0.0.1:8000";
     let currentUser = null;
-
-    // State Management
-    let currentTagPage = 1;
-    const tagPageSize = 10;
-    let totalTagPages = 1;
-
-    let currentPostPage = 1;
-    let postPageSize = 5;
-    let totalPostPages = 1;
-
-    let currentSortCriteria = 'reach'; 
-    let activeTag = "";
-    let registeredTags = [];
+    let pollingInterval = null;
     let currentPostsData = [];
 
-    // Polling Manager untuk Asynchronous Background Scraper
-    let pollingInterval = null;
+    // ===== AUTH =====
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById("loginUsername").value.trim();
+      const p = document.getElementById("loginPassword").value;
+      const errBox = document.getElementById("loginError");
+      const btn = document.getElementById("btnLoginSubmit");
+      errBox.classList.add("hidden");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin text-base"></i> <span>Memproses...</span>';
 
-    // ================= RBAC & AUTHENTICATION =================
-    function updateRoleUI() {
-      if (!currentUser) return;
-
-      document.getElementById("userNameLabel").textContent = currentUser.name;
-      const roleBadge = document.getElementById("userRoleBadge");
-      const avatarChar = document.getElementById("userAvatarChar");
-      const btnActionText = document.getElementById("btnActionText");
-      const btnActionIcon = document.getElementById("btnActionIcon");
-      const roleInstruction = document.getElementById("roleInstructionText");
-      const input = document.getElementById("customTagInput");
-
-      avatarChar.textContent = currentUser.name.charAt(0).toUpperCase();
-
-      if (currentUser.role === "super_admin") {
-        roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-purple-50 text-purple-700 border border-purple-200";
-        roleBadge.textContent = "SUPER ADMIN";
-        if (btnActionText) btnActionText.textContent = "Tambah Tag";
-        if (btnActionIcon) btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
-        input.placeholder = "Ketik tag baru untuk di-scrape (Super Admin Mode)...";
-        roleInstruction.innerHTML = "Status: <strong>Super Admin</strong> (Akses Penuh: Tambah Tag, Refresh, Hapus, dan Scrape Live)";
-      } else if (currentUser.role === "admin") {
-        roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
-        roleBadge.textContent = "ADMIN";
-        if (btnActionText) btnActionText.textContent = "Tambah Tag";
-        if (btnActionIcon) btnActionIcon.className = "mdi mdi-tag-plus-outline text-lg";
-        input.placeholder = "Ketik tag baru untuk di-scrape...";
-        roleInstruction.innerHTML = "Status: <strong>Admin</strong> (Dapat menambah tagging baru & menjalankan background scraper)";
-      } else {
-        // ROLE USER: HANYA BISA SEARCHING, TIDAK BISA TAMBAH TAGGING
-        roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded font-mono bg-slate-100 text-slate-700 border border-slate-200";
-        roleBadge.textContent = "USER";
-        if (btnActionText) btnActionText.textContent = "Cari Tag";
-        if (btnActionIcon) btnActionIcon.className = "mdi mdi-magnify text-lg";
-        input.placeholder = "Cari topik yang sudah tersedia (Mode Pencarian User)...";
-        roleInstruction.innerHTML = "Status: <strong>User</strong> (Mode Terbatas: Hanya dapat mencari postingan, <em>tidak diizinkan menambah tag baru</em>)";
+      try {
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.detail || "Login gagal"); }
+        const data = await res.json();
+        currentUser = data.user;
+        localStorage.setItem("threadlens_user", JSON.stringify(currentUser));
+        enterDashboard();
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Masuk Sistem</span> <i class="mdi mdi-arrow-right text-base"></i>';
       }
     }
 
-    function showLoginScreen() {
-      currentUser = null;
-      document.getElementById("mainDashboard").classList.add("hidden");
-      document.getElementById("loginScreen").classList.remove("hidden");
-      document.getElementById("loginUsername").value = "";
-      document.getElementById("loginPassword").value = "";
-      const errBox = document.getElementById("loginError");
-      if (errBox) errBox.classList.add("hidden");
+    function enterDashboard() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("mainDashboard").classList.remove("hidden");
+      updateUserUI();
+      checkBackend();
+      loadRegisteredTags();
+      if (currentUser && currentUser.role === "user") {
+        switchTab('search');
+      } else {
+        switchTab('register');
+      }
     }
 
     function handleLogout() {
       if (pollingInterval) clearInterval(pollingInterval);
       localStorage.removeItem("threadlens_user");
-      showLoginScreen();
+      currentUser = null;
+      document.getElementById("mainDashboard").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("loginUsername").value = "";
+      document.getElementById("loginPassword").value = "";
+      document.getElementById("loginError").classList.add("hidden");
     }
 
-    async function handleLoginSubmit(e) {
-      e.preventDefault();
-      const u = document.getElementById("loginUsername").value.trim();
-      const p = document.getElementById("loginPassword").value;
-      const errBox = document.getElementById("loginError");
-      const submitBtn = document.getElementById("btnLoginSubmit");
-      errBox.classList.add("hidden");
+    function updateUserUI() {
+      if (!currentUser) return;
+      document.getElementById("userName").textContent = currentUser.name;
+      document.getElementById("userAvatar").textContent = currentUser.name.charAt(0).toUpperCase();
+      const rb = document.getElementById("userRole");
+      if (currentUser.role === "super_admin") {
+        rb.className = "text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono bg-purple-50 text-purple-700 border border-purple-200";
+        rb.textContent = "SUPER ADMIN";
+      } else if (currentUser.role === "admin") {
+        rb.className = "text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono bg-emerald-50 text-emerald-700 border border-emerald-200";
+        rb.textContent = "ADMIN";
+      } else {
+        rb.className = "text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono bg-slate-100 text-slate-600 border border-slate-200";
+        rb.textContent = "USER";
+      }
 
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-base"></i> <span>Memproses...</span>`;
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: u, password: p })
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Username atau password salah");
-        }
-
-        const data = await res.json();
-        currentUser = data.user;
-        localStorage.setItem("threadlens_user", JSON.stringify(currentUser));
-        
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainDashboard").classList.remove("hidden");
-        
-        updateRoleUI();
-        checkBackendStatus();
-        fetchTags(1);
-      } catch (err) {
-        errBox.textContent = err.message;
-        errBox.classList.remove("hidden");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>Masuk Sistem</span> <i class="mdi mdi-arrow-right text-base"></i>`;
+      // Role user: hanya bisa search
+      if (currentUser.role === "user") {
+        document.getElementById("tabRegister").classList.add("hidden");
+        switchTab("search");
+      } else {
+        document.getElementById("tabRegister").classList.remove("hidden");
       }
     }
 
-    // TRIGGER SESUAI ROLE (ASYNCHRONOUS NON-BLOCKING)
-    async function handleActionTrigger() {
-      const input = document.getElementById("customTagInput");
-      let val = input.value.trim();
+    async function checkBackend() {
+      const b = document.getElementById("backendBadge");
+      try {
+        const r = await fetch(`${API}/`);
+        if (r.ok) {
+          b.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex items-center gap-1";
+          b.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online';
+        }
+      } catch {
+        b.className = "text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-200 flex items-center gap-1";
+        b.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Offline';
+      }
+    }
+
+    // ===== TAB SWITCHING =====
+    function switchTab(tab) {
+      const tabReg = document.getElementById("tabRegister");
+      const tabSrc = document.getElementById("tabSearch");
+      const panelReg = document.getElementById("panelRegister");
+      const panelSrc = document.getElementById("panelSearch");
+
+      if (tab === "register") {
+        tabReg.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition tab-active";
+        tabSrc.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition tab-inactive";
+        panelReg.classList.remove("hidden");
+        panelSrc.classList.add("hidden");
+      } else {
+        tabSrc.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition tab-active";
+        tabReg.className = "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition tab-inactive";
+        panelSrc.classList.remove("hidden");
+        panelReg.classList.add("hidden");
+        populateSearchTagDropdown();
+      }
+    }
+
+    function goToSearch(tag) {
+      switchTab('search');
+      const sel = document.getElementById("searchTag");
+      sel.value = tag;
+      executeSearch();
+    }
+
+    // ===== TAB 1: KELOLA TAGGING (Tanpa Date) =====
+    async function registerTag() {
+      const input = document.getElementById("newTagInput");
+      let val = input.value.trim().replace("#", "").toLowerCase();
       if (!val) return;
-      const cleanTag = val.replace("#", "").trim().toLowerCase();
-      if (!cleanTag) return;
+      if (!currentUser || currentUser.role === "user") { alert("Hanya Admin yang dapat menambah tag."); return; }
 
-      // JIKA USER: HANYA BISA FILTER / SEARCH
-      if (currentUser && currentUser.role === "user") {
-        input.value = "";
-        selectTag(cleanTag);
-        return;
-      }
-
-      // JIKA ADMIN / SUPER ADMIN: TAMBAH TAGGING DENGAN ASYNC BACKGROUND SCRAPER
-      const country = document.getElementById("countrySelect").value;
-      const btn = document.getElementById("btnAction");
-      const btnIcon = document.getElementById("btnActionIcon");
-      const btnText = document.getElementById("btnActionText");
-
-      if (btnIcon && btnText) {
-        btnIcon.className = "mdi mdi-loading mdi-spin text-lg";
-        btnText.textContent = "Mendaftarkan...";
-      }
+      const btn = document.getElementById("btnRegister");
+      const icon = document.getElementById("btnRegisterIcon");
+      const text = document.getElementById("btnRegisterText");
       btn.disabled = true;
+      icon.className = "mdi mdi-loading mdi-spin text-lg";
+      text.textContent = "Mendaftarkan...";
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/tags/register?tag=${cleanTag}&country=${country}`, {
-          method: "POST",
-          headers: {
-            "x-user-role": currentUser ? currentUser.role : "admin"
-          }
+        const res = await fetch(`${API}/api/tags/register?tag=${encodeURIComponent(val)}&country=ID`, {
+          method: "POST", headers: { "x-user-role": currentUser.role }
         });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Gagal menambah tag");
-        }
-
+        if (!res.ok) { const err = await res.json(); throw new Error(err.detail); }
         input.value = "";
-        activeTag = cleanTag;
-        document.getElementById("currentFilterTagTitle").textContent = "#" + cleanTag;
-
-        // Segera render tag & mulai polling status
-        await fetchTags(1);
-        fetchPosts(1);
-        startPollingTag(cleanTag);
-      } catch (err) {
-        alert(err.message);
-      } finally {
+        await loadRegisteredTags();
+        startPolling(val);
+      } catch (err) { alert(err.message); }
+      finally {
         btn.disabled = false;
-        updateRoleUI();
+        icon.className = "mdi mdi-plus-circle-outline text-lg";
+        text.textContent = "Tambah Tag";
       }
     }
 
-    // POLLING ASYNC SCRAPER PROGRESS
-    function startPollingTag(tag) {
-      if (pollingInterval) clearInterval(pollingInterval);
-
-      pollingInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/tags/status/${tag}`);
-          if (!res.ok) return;
-          const statusData = await res.json();
-
-          if (statusData.status === "ready" || statusData.status === "failed") {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-            // Perbarui tags list dengan data hasil akhir
-            await fetchTags(currentTagPage);
-            if (activeTag === tag) {
-              fetchPosts(1);
-            }
-          } else {
-            // Masih scraping: perbarui daftar tags agar status card tetap akurat
-            fetchTags(currentTagPage);
-          }
-        } catch (e) {
-          console.warn("Polling error:", e);
-        }
-      }, 2500);
-    }
-
-    // REFRESH SCRAPING TAG
-    async function handleRefreshTag(tag, event) {
-      if (event) event.stopPropagation();
-      if (!currentUser || currentUser.role === "user") {
-        alert("Hanya Admin yang dapat merefresh data.");
-        return;
-      }
-
-      const country = document.getElementById("countrySelect").value;
+    async function loadRegisteredTags() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/tags/refresh?tag=${tag}&country=${country}`, {
-          method: "POST",
-          headers: { "x-user-role": currentUser.role }
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Gagal merefresh");
-        }
-        activeTag = tag;
-        document.getElementById("currentFilterTagTitle").textContent = "#" + tag;
-        await fetchTags(currentTagPage);
-        fetchPosts(1);
-        startPollingTag(tag);
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    // DELETE TAG
-    async function handleDeleteTag(tag, event) {
-      if (event) event.stopPropagation();
-      if (!currentUser || currentUser.role === "user") {
-        alert("Hanya Admin yang dapat menghapus data.");
-        return;
-      }
-
-      if (!confirm(`Apakah Anda yakin ingin menghapus tag #${tag}?`)) return;
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/tags/${tag}`, {
-          method: "DELETE",
-          headers: { "x-user-role": currentUser.role }
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Gagal menghapus tag");
-        }
-
-        if (activeTag === tag) {
-          activeTag = "";
-          document.getElementById("currentFilterTagTitle").textContent = "-";
-        }
-        await fetchTags(1);
-        fetchPosts(1);
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    // 1. Cek Backend Python
-    async function checkBackendStatus() {
-      const badge = document.getElementById("backendBadge");
-      try {
-        const res = await fetch(`${API_BASE_URL}/`, { method: "GET" });
-        if (res.ok) {
-          badge.className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex items-center gap-1";
-          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Python API Connected`;
-        }
-      } catch (err) {
-        badge.className = "text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold border border-amber-200 flex items-center gap-1";
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Backend Offline (Local Mode)`;
-      }
-    }
-
-    // 2. Fetch Tags dengan Pagination
-    async function fetchTags(page = 1) {
-      currentTagPage = page;
-      const container = document.getElementById("top20TagsGrid");
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/tags?sort_by=${currentSortCriteria}&page=${currentTagPage}&page_size=${tagPageSize}`);
-        if (!res.ok) throw new Error();
+        const res = await fetch(`${API}/api/tags?sort_by=reach&page=1&page_size=50`);
+        if (!res.ok) return;
         const data = await res.json();
-        
-        registeredTags = data.items;
-        totalTagPages = data.pagination.total_pages;
-        updateTagPagingControls(data.pagination);
-        renderTagsUI(data.items);
-        renderQuickTagsChips(data.items);
-
-        // Jika belum ada activeTag dan ada tag tersedia, pilih tag pertama
-        if (!activeTag && data.items.length > 0) {
-          selectTag(data.items[0].tag);
-        } else if (data.items.length === 0) {
-          fetchPosts(1);
-        }
-      } catch (err) {
-        console.warn("Fetch tags error:", err);
-      }
+        renderRegisteredTags(data.items);
+        document.getElementById("tagCountBadge").textContent = `${data.pagination.total_items} tag`;
+      } catch (e) { console.warn(e); }
     }
 
-    function updateTagPagingControls(pagination) {
-      document.getElementById("tagPageInfo").textContent = `Hal ${pagination.page} / ${pagination.total_pages}`;
-      
-      const prevBtn = document.getElementById("btnPrevTags");
-      const nextBtn = document.getElementById("btnNextTags");
-
-      prevBtn.disabled = !pagination.has_prev;
-      prevBtn.className = pagination.has_prev 
-        ? "px-2.5 py-1 rounded-lg bg-white text-slate-800 shadow-sm hover:bg-slate-50 flex items-center gap-1"
-        : "px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1";
-
-      nextBtn.disabled = !pagination.has_next;
-      nextBtn.className = pagination.has_next 
-        ? "px-2.5 py-1 rounded-lg bg-white text-slate-800 shadow-sm hover:bg-slate-50 flex items-center gap-1"
-        : "px-2.5 py-1 rounded-lg text-slate-400 cursor-not-allowed flex items-center gap-1";
-    }
-
-    function prevTagPage() {
-      if (currentTagPage > 1) fetchTags(currentTagPage - 1);
-    }
-
-    function nextTagPage() {
-      if (currentTagPage < totalTagPages) fetchTags(currentTagPage + 1);
-    }
-
-    function renderTagsUI(tags) {
-      const container = document.getElementById("top20TagsGrid");
-
+    function renderRegisteredTags(tags) {
+      const c = document.getElementById("registeredTagsList");
       if (tags.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full text-center py-10 bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6">
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center mx-auto mb-2">
-              <i class="mdi mdi-tag-off-outline text-xl"></i>
-            </div>
-            <div class="text-xs font-bold text-slate-800">Belum Ada Tagging Terdaftar</div>
-            <p class="text-[11px] text-[#475569] mt-1 max-w-sm mx-auto">
-              ${currentUser && currentUser.role !== 'user' 
-                ? 'Daftarkan hashtag atau kata kunci baru pada formulir di atas untuk memulai pemindaian Threads secara live.' 
-                : 'Belum ada data topik yang dapat dicari. Hubungi Admin untuk mendaftarkan tag baru.'}
-            </p>
-          </div>
-        `;
+        c.innerHTML = `
+          <div class="text-center py-8 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+            <i class="mdi mdi-tag-off-outline text-2xl text-slate-300 block mb-1"></i>
+            <p class="text-xs text-slate-500">Belum ada tagging terdaftar. Masukkan kata kunci baru di atas untuk mulai scraping.</p>
+          </div>`;
         return;
       }
-
-      container.innerHTML = tags.map(t => {
-        const isSelected = activeTag === t.tag;
+      const canManage = currentUser && currentUser.role !== "user";
+      c.innerHTML = tags.map(t => {
         const isScraping = t.status === "scraping";
         const isFailed = t.status === "failed";
-
-        let statusBadge = '';
+        let statusHtml = '';
         if (isScraping) {
-          statusBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 animate-pulse"><i class="mdi mdi-loading mdi-spin"></i> Memindai...</span>`;
+          statusHtml = '<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold flex items-center gap-1 animate-pulse"><i class="mdi mdi-loading mdi-spin"></i> Memindai...</span>';
         } else if (isFailed) {
-          statusBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1"><i class="mdi mdi-alert-circle text-xs"></i> Gagal</span>`;
+          statusHtml = '<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-semibold flex items-center gap-1"><i class="mdi mdi-alert-circle"></i> Gagal</span>';
         } else {
-          statusBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} flex items-center gap-1"><i class="mdi mdi-check-circle text-xs"></i> Siap</span>`;
+          statusHtml = `<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex items-center gap-1"><i class="mdi mdi-check-circle"></i> ${t.total_posts} posts</span>`;
         }
 
-        const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin');
-
         return `
-          <div 
-            onclick="selectTag('${t.tag}')"
-            class="p-3.5 rounded-2xl border cursor-pointer transition text-left flex flex-col justify-between relative group ${
-              isSelected 
-                ? 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-lg shadow-indigo-100' 
-                : 'bg-white border-slate-200 hover:border-[#4F46E5] text-slate-900 hover:shadow-sm'
-            }"
-          >
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}">
-                #${t.rank}
-              </span>
-              ${statusBadge}
-            </div>
-            
-            <div class="my-2.5">
-              <div class="text-xs font-bold flex items-center gap-1.5 truncate">
-                <i class="mdi ${t.icon || 'mdi-pound'} text-base ${isSelected ? 'text-amber-300' : 'text-[#4F46E5]'}"></i>
-                #${t.label}
+          <div class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-200 transition group">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-bold text-xs">
+                <i class="mdi mdi-pound text-base"></i>
               </div>
-              <div class="text-[11px] mt-0.5 ${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">
-                ${isScraping ? 'Memproses di latar belakang...' : `${t.total_posts.toLocaleString()} posts riil`}
+              <div>
+                <div class="text-xs font-bold text-slate-900">#${t.tag}</div>
+                <div class="text-[10px] text-[#475569] font-mono">${t.last_scraped_at ? 'Scraped: ' + t.last_scraped_at : 'Belum di-scrape'}</div>
               </div>
             </div>
-
-            <div class="border-t ${isSelected ? 'border-indigo-400/30' : 'border-slate-100'} pt-2 text-[11px] flex justify-between items-center font-mono">
-              <span class="${isSelected ? 'text-indigo-200' : 'text-[#475569]'}">Reach:</span>
-              <span class="font-bold ${isSelected ? 'text-white' : 'text-[#F59E0B]'}">
-                ${t.total_reach >= 1000 ? (t.total_reach / 1000).toFixed(1) + 'k' : t.total_reach}
-              </span>
-            </div>
-
-            ${canManage ? `
-              <div class="absolute top-2 right-2 hidden group-hover:flex items-center gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200 shadow-sm z-10">
-                <button onclick="handleRefreshTag('${t.tag}', event)" title="Scrape Ulang" class="p-1 rounded hover:bg-slate-100 text-slate-600 hover:text-indigo-600 transition">
-                  <i class="mdi mdi-refresh text-xs"></i>
+            <div class="flex items-center gap-2">
+              ${statusHtml}
+              <button onclick="goToSearch('${t.tag}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-semibold flex items-center gap-1 transition" title="Cari postingan tag ini">
+                <i class="mdi mdi-magnify text-xs"></i> Cari
+              </button>
+              ${canManage ? `
+                <button onclick="refreshTag('${t.tag}')" title="Scrape Ulang" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition">
+                  <i class="mdi mdi-refresh text-sm"></i>
                 </button>
-                <button onclick="handleDeleteTag('${t.tag}', event)" title="Hapus Tag" class="p-1 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition">
-                  <i class="mdi mdi-trash-can-outline text-xs"></i>
+                <button onclick="deleteTag('${t.tag}')" title="Hapus Tag" class="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition">
+                  <i class="mdi mdi-trash-can-outline text-sm"></i>
                 </button>
-              </div>
-            ` : ''}
-          </div>
-        `;
+              ` : ''}
+            </div>
+          </div>`;
       }).join("");
     }
 
-    function renderQuickTagsChips(tags) {
-      const wrapper = document.getElementById("quickTagsWrapper");
-      const container = document.getElementById("activeTagsContainer");
-      if (tags.length === 0) {
-        wrapper.classList.add("hidden");
-        return;
-      }
-      wrapper.classList.remove("hidden");
-      container.innerHTML = tags.map(t => `
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs border transition cursor-pointer ${
-          activeTag === t.tag 
-            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-semibold' 
-            : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-        }">
-          <i class="mdi mdi-pound text-xs text-[#4F46E5]"></i>
-          <span onclick="selectTag('${t.tag}')">${t.tag}</span>
-          ${(currentUser && currentUser.role !== 'user') ? `
-            <button onclick="handleDeleteTag('${t.tag}', event)" class="text-slate-400 hover:text-rose-500 font-bold ml-0.5" title="Hapus tag">
-              <i class="mdi mdi-close-circle text-xs"></i>
-            </button>
-          ` : ''}
-        </span>
-      `).join("");
+    function startPolling(tag) {
+      if (pollingInterval) clearInterval(pollingInterval);
+      pollingInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`${API}/api/tags/status/${tag}`);
+          if (!res.ok) return;
+          const d = await res.json();
+          if (d.status === "ready" || d.status === "failed") {
+            clearInterval(pollingInterval); pollingInterval = null;
+          }
+          loadRegisteredTags();
+        } catch (e) { console.warn(e); }
+      }, 2500);
     }
 
-    // 3. Fetch Posts Tanpa Filter Tanggal (Real Posts Paging)
-    async function fetchPosts(page = 1) {
-      currentPostPage = page;
+    async function refreshTag(tag) {
+      if (!currentUser || currentUser.role === "user") return;
+      try {
+        await fetch(`${API}/api/tags/refresh?tag=${tag}&country=ID`, {
+          method: "POST", headers: { "x-user-role": currentUser.role }
+        });
+        loadRegisteredTags();
+        startPolling(tag);
+      } catch (e) { alert("Gagal merefresh: " + e.message); }
+    }
+
+    async function deleteTag(tag) {
+      if (!confirm(`Hapus tag #${tag}?`)) return;
+      try {
+        const res = await fetch(`${API}/api/tags/${tag}`, {
+          method: "DELETE", headers: { "x-user-role": currentUser.role }
+        });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.detail); }
+        loadRegisteredTags();
+      } catch (e) { alert(e.message); }
+    }
+
+    // ===== TAB 2: SEARCH POSTS =====
+    async function populateSearchTagDropdown() {
+      try {
+        const res = await fetch(`${API}/api/tags?sort_by=reach&page=1&page_size=50`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const sel = document.getElementById("searchTag");
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">-- Pilih Tagging --</option>';
+        data.items.filter(t => t.status === "ready").forEach(t => {
+          sel.innerHTML += `<option value="${t.tag}" ${t.tag === currentVal ? 'selected' : ''}>#${t.tag} (${t.total_posts} posts)</option>`;
+        });
+      } catch (e) { console.warn(e); }
+    }
+
+    const METRIC_LABELS = {
+      likes: "Like Tertinggi",
+      replies: "Komentar Tertinggi",
+      reposts: "Repost Tertinggi",
+      quotes: "Quote Tertinggi",
+      shares: "Send To Tertinggi"
+    };
+
+    async function executeSearch() {
+      const tag = document.getElementById("searchTag").value;
+      const targetDate = document.getElementById("searchDate").value;
+      const metric = document.getElementById("searchMetric").value;
+      if (!tag) { alert("Pilih tagging terlebih dahulu."); return; }
+
+      const btn = document.getElementById("btnSearch");
+      const icon = document.getElementById("btnSearchIcon");
+      const text = document.getElementById("btnSearchText");
+      btn.disabled = true;
+      icon.className = "mdi mdi-loading mdi-spin text-lg";
+      text.textContent = "Memuat...";
+
+      document.getElementById("searchResultsSection").classList.remove("hidden");
+      document.getElementById("resultTagLabel").textContent = "#" + tag;
+      document.getElementById("resultMetricLabel").textContent = "berdasarkan " + (METRIC_LABELS[metric] || metric);
+      document.getElementById("resultDateFilterNote").textContent = targetDate ? `Tanggal: ${targetDate}` : "Semua Tanggal";
+
       const grid = document.getElementById("postsGrid");
-      const badge = document.getElementById("postCountBadge");
-      const sort = document.getElementById("postSortFilter").value;
-      const country = document.getElementById("countrySelect").value;
-
-      if (!activeTag) {
-        badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> 0 Postingan`;
-        grid.innerHTML = `
-          <div class="col-span-full text-center py-14 border border-slate-200 rounded-2xl bg-white shadow-sm">
-            <i class="mdi mdi-pound text-4xl text-slate-300 mb-2 block"></i>
-            <p class="text-sm font-semibold text-slate-800">Belum ada tag yang dipilih</p>
-            <p class="text-xs text-[#475569] mt-1">Silakan ketik dan daftarkan tag baru di atas atau pilih tag dari daftar.</p>
-          </div>
-        `;
-        updatePostPagingControls({ page: 1, page_size: postPageSize, total_items: 0, total_pages: 1, has_prev: false, has_next: false });
-        return;
-      }
-
-      // Skeleton loader
-      grid.innerHTML = Array(3).fill(0).map(() => `
+      grid.innerHTML = Array(4).fill(0).map(() => `
         <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm animate-pulse space-y-3">
           <div class="flex gap-3 items-center">
             <div class="w-10 h-10 bg-slate-200 rounded-full"></div>
-            <div class="space-y-1.5 flex-1">
-              <div class="h-3 bg-slate-200 rounded w-1/3"></div>
-              <div class="h-2.5 bg-slate-100 rounded w-1/4"></div>
-            </div>
+            <div class="space-y-1.5 flex-1"><div class="h-3 bg-slate-200 rounded w-1/3"></div><div class="h-2.5 bg-slate-100 rounded w-1/4"></div></div>
           </div>
-          <div class="h-12 bg-slate-100 rounded"></div>
-          <div class="grid grid-cols-4 gap-2 pt-2">
-            <div class="h-8 bg-slate-100 rounded"></div>
-            <div class="h-8 bg-slate-100 rounded"></div>
-            <div class="h-8 bg-slate-100 rounded"></div>
-            <div class="h-8 bg-slate-100 rounded"></div>
-          </div>
+          <div class="h-10 bg-slate-100 rounded"></div>
+          <div class="grid grid-cols-5 gap-1.5 pt-2"><div class="h-7 bg-slate-100 rounded"></div><div class="h-7 bg-slate-100 rounded"></div><div class="h-7 bg-slate-100 rounded"></div><div class="h-7 bg-slate-100 rounded"></div><div class="h-7 bg-slate-100 rounded"></div></div>
         </div>
       `).join("");
 
       try {
-        const url = `${API_BASE_URL}/api/posts?tag=${activeTag}&country=${country}&sort_by=${sort}&page=${currentPostPage}&page_size=${postPageSize}`;
+        let url = `${API}/api/posts?tag=${encodeURIComponent(tag)}&sort_by=${metric}&limit=20&page=1&page_size=20`;
+        if (targetDate) {
+          url += `&target_date=${encodeURIComponent(targetDate)}`;
+        }
         const res = await fetch(url);
         if (!res.ok) throw new Error();
         const data = await res.json();
 
-        // JIKA STATUS TAG SEDANG SCRAPING: TAMPILKAN STATUS ASINKRON AKTIF
         if (data.status === "scraping") {
-          badge.innerHTML = `<i class="mdi mdi-loading mdi-spin text-xs text-amber-500"></i> Memindai...`;
           grid.innerHTML = `
-            <div class="col-span-full bg-white border border-indigo-100 rounded-2xl p-8 md:p-12 text-center space-y-4 shadow-sm animate-pulse">
-              <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-[#4F46E5] flex items-center justify-center mx-auto shadow-inner">
-                <i class="mdi mdi-radar mdi-spin text-3xl"></i>
-              </div>
-              <div class="space-y-1">
-                <h3 class="text-base font-bold text-slate-900">Sedang Memindai Threads untuk #${activeTag}...</h3>
-                <p class="text-xs text-[#475569] max-w-md mx-auto leading-relaxed">
-                  Browser Playwright sedang membuka Threads di latar belakang untuk mengekstrak postingan, likes, komentar, repost asli, dan tautan permalink.
-                </p>
-              </div>
-              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 text-amber-800 text-xs rounded-full border border-amber-200 font-semibold">
-                <i class="mdi mdi-loading mdi-spin text-amber-600"></i>
-                <span>${data.status_message || 'Sedang memindai Threads di latar belakang...'}</span>
-              </div>
-            </div>
-          `;
-          updatePostPagingControls({ page: 1, page_size: postPageSize, total_items: 0, total_pages: 1, has_prev: false, has_next: false });
-          startPollingTag(activeTag);
+            <div class="col-span-full bg-white border border-indigo-100 rounded-2xl p-10 text-center space-y-3 shadow-sm animate-pulse">
+              <i class="mdi mdi-radar mdi-spin text-3xl text-[#4F46E5] block"></i>
+              <p class="text-sm font-bold text-slate-900">Sedang Memindai Threads untuk #${tag}...</p>
+              <p class="text-xs text-[#475569]">${data.status_message}</p>
+            </div>`;
+          startPolling(tag);
           return;
         }
 
         currentPostsData = data.items;
-        totalPostPages = data.pagination.total_pages;
-
-        badge.innerHTML = `<i class="mdi mdi-database text-xs text-[#4F46E5]"></i> ${data.pagination.total_items} Postingan`;
-        updatePostPagingControls(data.pagination);
-        renderPostsUI(data.items);
-      } catch (err) {
-        console.warn("Posts fetch fallback:", err);
+        renderPosts(data.items, metric, targetDate);
+      } catch (e) {
+        grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-sm text-slate-500">Gagal memuat data.</p></div>';
+      } finally {
+        btn.disabled = false;
+        icon.className = "mdi mdi-magnify text-lg";
+        text.textContent = "Tampilkan";
       }
     }
 
-    function onPostPageSizeChange() {
-      postPageSize = parseInt(document.getElementById("postPageSizeSelect").value);
-      fetchPosts(1);
+    function getMetricValue(p, metric) {
+      if (metric === "likes") return p.metrics.likes;
+      if (metric === "replies") return p.metrics.replies;
+      if (metric === "reposts") return p.metrics.reposts || 0;
+      if (metric === "quotes") return p.metrics.quotes || 0;
+      if (metric === "shares") return p.metrics.shares || 0;
+      return 0;
     }
 
-    function updatePostPagingControls(p) {
-      const startItem = p.total_items === 0 ? 0 : (p.page - 1) * p.page_size + 1;
-      const endItem = Math.min(p.page * p.page_size, p.total_items);
-      document.getElementById("postsPagingInfo").textContent = `Menampilkan ${startItem} - ${endItem} dari ${p.total_items} postingan riil`;
-      document.getElementById("postPageIndicator").textContent = `Hal ${p.page} / ${p.total_pages}`;
-
-      const prevBtn = document.getElementById("btnPrevPosts");
-      const nextBtn = document.getElementById("btnNextPosts");
-
-      prevBtn.disabled = !p.has_prev;
-      prevBtn.className = p.has_prev
-        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm cursor-pointer"
-        : "px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1";
-
-      nextBtn.disabled = !p.has_next;
-      nextBtn.className = p.has_next
-        ? "px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 flex items-center gap-1 shadow-sm cursor-pointer"
-        : "px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed flex items-center gap-1";
+    function fmtNum(n) {
+      if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+      if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+      return (n || 0).toLocaleString();
     }
 
-    function prevPostPage() {
-      if (currentPostPage > 1) fetchPosts(currentPostPage - 1);
-    }
-
-    function nextPostPage() {
-      if (currentPostPage < totalPostPages) fetchPosts(currentPostPage + 1);
-    }
-
-    function renderPostsUI(posts) {
+    function renderPosts(posts, metric, targetDate) {
       const grid = document.getElementById("postsGrid");
       if (posts.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full text-center py-14 border border-slate-200 rounded-2xl bg-white shadow-sm">
-            <i class="mdi mdi-card-bulleted-off-outline text-4xl text-slate-300 mb-2 block"></i>
-            <p class="text-sm font-semibold text-slate-800">Tidak ada postingan ditemukan untuk #${activeTag}</p>
-            <p class="text-xs text-[#475569] mt-1">
-              ${currentUser && currentUser.role !== 'user' ? 'Anda dapat merefresh scraping atau memasukkan kata kunci topik lainnya.' : 'Coba pilih kata kunci lainnya.'}
-            </p>
-          </div>
-        `;
+          <div class="col-span-full text-center py-12 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <i class="mdi mdi-emoticon-sad-outline text-3xl text-slate-300 block mb-2"></i>
+            <p class="text-sm font-semibold text-slate-800">Tidak ada postingan ditemukan ${targetDate ? 'pada tanggal ' + targetDate : ''}</p>
+            <p class="text-xs text-slate-500 mt-1">Coba kosongkan filter tanggal atau pilih metrik lain.</p>
+          </div>`;
         return;
       }
 
-      grid.innerHTML = posts.map((p, idx) => `
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#4F46E5] hover:shadow-md transition flex flex-col justify-between group">
-          <div>
-            <!-- Header -->
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="flex items-center gap-3">
-                <img src="${p.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" alt="${p.author}" class="w-10 h-10 rounded-full object-cover border border-slate-200" />
-                <div>
-                  <div class="text-xs font-bold text-slate-900">${p.author}</div>
-                  <div class="text-[11px] text-[#475569] flex items-center gap-1">
-                    <span>${p.handle}</span>
-                    <span>•</span>
-                    <span class="font-mono text-slate-500">${p.country}</span>
-                  </div>
-                </div>
-              </div>
-              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${
-                idx === 0 
-                  ? 'bg-amber-50 text-[#D97706] border border-amber-200 font-semibold' 
-                  : 'bg-slate-100 text-[#475569]'
-              }">
-                #${(currentPostPage - 1) * postPageSize + idx + 1}
-              </span>
-            </div>
+      grid.innerHTML = posts.map((p, idx) => {
+        const mainVal = getMetricValue(p, metric);
+        const mainLabel = METRIC_LABELS[metric] ? METRIC_LABELS[metric].split(" ")[0] : metric;
 
-            <!-- Content -->
-            <p class="text-xs md:text-sm text-slate-800 leading-relaxed mb-4">
-              ${p.content}
-            </p>
+        return `
+        <a href="${p.post_url}" target="_blank" rel="noopener noreferrer"
+           class="block bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#4F46E5] hover:shadow-lg transition-all cursor-pointer group relative">
+
+          <!-- Ranking Badge (#1 to #20) -->
+          <div class="absolute -top-2 -left-2 w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-extrabold shadow-sm ${
+            idx === 0 ? 'bg-amber-500 text-white' : idx <= 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'
+          }">
+            ${idx + 1}
           </div>
 
-          <!-- Metrics Row (Likes, Komentar, Repost, Est. Reach) -->
-          <div class="border-t border-slate-100 pt-3.5 space-y-3">
-            <div class="grid grid-cols-4 gap-1.5 text-center">
-              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <span class="text-[10px] text-[#475569] block flex items-center justify-center gap-0.5">
-                  <i class="mdi mdi-heart text-xs text-rose-500"></i> Likes
-                </span>
-                <span class="text-xs font-extrabold text-rose-600 mt-0.5 block">${p.metrics.likes.toLocaleString()}</span>
-              </div>
-              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <span class="text-[10px] text-[#475569] block flex items-center justify-center gap-0.5">
-                  <i class="mdi mdi-comment-text-outline text-xs text-sky-500"></i> Komentar
-                </span>
-                <span class="text-xs font-extrabold text-sky-600 mt-0.5 block">${p.metrics.replies.toLocaleString()}</span>
-              </div>
-              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <span class="text-[10px] text-[#475569] block flex items-center justify-center gap-0.5">
-                  <i class="mdi mdi-repeat text-xs text-emerald-500"></i> Repost
-                </span>
-                <span class="text-xs font-extrabold text-emerald-600 mt-0.5 block">${(p.metrics.reposts || 0).toLocaleString()}</span>
-              </div>
-              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <span class="text-[10px] text-[#475569] block flex items-center justify-center gap-0.5">
-                  <i class="mdi mdi-fire text-xs text-[#F59E0B]"></i> Est. Reach
-                </span>
-                <span class="text-xs font-extrabold text-[#D97706] mt-0.5 block">${p.metrics.reach >= 1000 ? (p.metrics.reach / 1000).toFixed(1) + 'k' : p.metrics.reach}</span>
+          <!-- Header -->
+          <div class="flex items-center gap-3 mb-3 mt-1">
+            <img src="${p.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" alt="" class="w-9 h-9 rounded-full object-cover border border-slate-200" />
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-slate-900 truncate">${p.author}</div>
+              <div class="text-[10px] text-[#475569] flex items-center gap-1">
+                <span class="truncate">${p.handle}</span>
+                <span>•</span>
+                <span class="font-mono text-slate-600">${p.posted_at_formatted || p.posted_date}</span>
               </div>
             </div>
-
-            <!-- Card Footer: Tanggal Asli & Link Permalinks Langsung -->
-            <div class="flex items-center justify-between text-[11px] text-[#475569] pt-1">
-              <span class="flex items-center gap-1 font-medium bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700 font-mono text-[11px]">
-                <i class="mdi mdi-calendar-clock text-xs text-[#4F46E5]"></i> ${p.posted_at_formatted || p.posted_date}
-              </span>
-              <a href="${p.post_url}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white font-semibold flex items-center gap-1 transition shadow-sm" title="Buka langsung postingan spesifik ini di Threads">
-                Buka Postingan Ini <i class="mdi mdi-arrow-top-right text-xs"></i>
-              </a>
+            <!-- Primary Selected Metric Highlighted -->
+            <div class="text-right">
+              <div class="text-base font-extrabold text-[#4F46E5]">${fmtNum(mainVal)}</div>
+              <div class="text-[9px] text-[#475569] font-semibold uppercase">${mainLabel}</div>
             </div>
           </div>
-        </div>
-      `).join("");
+
+          <!-- Content Snippet -->
+          <p class="text-xs text-slate-700 leading-relaxed mb-3 line-clamp-3">${p.content}</p>
+
+          <!-- Metrics Row: Komentar, Like, Repost, Quote, Send To -->
+          <div class="grid grid-cols-5 gap-1 text-center border-t border-slate-100 pt-2.5">
+            <div class="p-1.5 rounded-lg ${metric === 'likes' ? 'bg-rose-50 ring-1 ring-rose-300 font-bold' : 'bg-slate-50'}">
+              <div class="text-[9px] text-[#475569] flex items-center justify-center gap-0.5"><i class="mdi mdi-heart text-rose-500"></i> Like</div>
+              <div class="text-[11px] ${metric === 'likes' ? 'font-extrabold text-rose-600' : 'font-semibold text-slate-700'}">${fmtNum(p.metrics.likes)}</div>
+            </div>
+            <div class="p-1.5 rounded-lg ${metric === 'replies' ? 'bg-sky-50 ring-1 ring-sky-300 font-bold' : 'bg-slate-50'}">
+              <div class="text-[9px] text-[#475569] flex items-center justify-center gap-0.5"><i class="mdi mdi-comment-text-outline text-sky-500"></i> Komentar</div>
+              <div class="text-[11px] ${metric === 'replies' ? 'font-extrabold text-sky-600' : 'font-semibold text-slate-700'}">${fmtNum(p.metrics.replies)}</div>
+            </div>
+            <div class="p-1.5 rounded-lg ${metric === 'reposts' ? 'bg-emerald-50 ring-1 ring-emerald-300 font-bold' : 'bg-slate-50'}">
+              <div class="text-[9px] text-[#475569] flex items-center justify-center gap-0.5"><i class="mdi mdi-repeat text-emerald-500"></i> Repost</div>
+              <div class="text-[11px] ${metric === 'reposts' ? 'font-extrabold text-emerald-600' : 'font-semibold text-slate-700'}">${fmtNum(p.metrics.reposts || 0)}</div>
+            </div>
+            <div class="p-1.5 rounded-lg ${metric === 'quotes' ? 'bg-amber-50 ring-1 ring-amber-300 font-bold' : 'bg-slate-50'}">
+              <div class="text-[9px] text-[#475569] flex items-center justify-center gap-0.5"><i class="mdi mdi-format-quote-close text-amber-500"></i> Quote</div>
+              <div class="text-[11px] ${metric === 'quotes' ? 'font-extrabold text-amber-600' : 'font-semibold text-slate-700'}">${fmtNum(p.metrics.quotes || 0)}</div>
+            </div>
+            <div class="p-1.5 rounded-lg ${metric === 'shares' ? 'bg-violet-50 ring-1 ring-violet-300 font-bold' : 'bg-slate-50'}">
+              <div class="text-[9px] text-[#475569] flex items-center justify-center gap-0.5"><i class="mdi mdi-send-outline text-violet-500"></i> Send To</div>
+              <div class="text-[11px] ${metric === 'shares' ? 'font-extrabold text-violet-600' : 'font-semibold text-slate-700'}">${fmtNum(p.metrics.shares || 0)}</div>
+            </div>
+          </div>
+
+          <!-- Open Direct Indicator -->
+          <div class="mt-2.5 flex items-center justify-end text-[10px] text-indigo-400 group-hover:text-[#4F46E5] font-semibold transition">
+            Buka Postingan Ini di Threads <i class="mdi mdi-arrow-top-right text-xs ml-0.5"></i>
+          </div>
+        </a>`;
+      }).join("");
     }
 
-    function selectTag(tag) {
-      activeTag = tag;
-      document.getElementById("currentFilterTagTitle").textContent = "#" + tag;
-      fetchTags(currentTagPage);
-      fetchPosts(1);
-    }
-
-    function changeSortCriteria(criteria) {
-      currentSortCriteria = criteria;
-      document.querySelectorAll('#btnSortTagReach, #btnSortTagPosts, #btnSortTagComments, #btnSortTagLikes').forEach(b => {
-        b.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-[#475569] hover:text-slate-900 transition flex items-center gap-1";
-      });
-
-      const label = document.getElementById('currentSortLabel');
-      if (criteria === 'reach') {
-        document.getElementById('btnSortTagReach').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Total Est. Reach";
-      } else if (criteria === 'comments') {
-        document.getElementById('btnSortTagComments').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Total Komentar";
-      } else if (criteria === 'likes') {
-        document.getElementById('btnSortTagLikes').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Total Likes";
-      } else if (criteria === 'posts') {
-        document.getElementById('btnSortTagPosts').className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white transition flex items-center gap-1";
-        label.textContent = "Jumlah Postingan";
-      }
-
-      fetchTags(1);
-    }
-
+    // ===== EXPORT =====
     function exportData(type) {
-      if (!currentPostsData || currentPostsData.length === 0) {
-        alert("Tidak ada data postingan untuk diekspor.");
-        return;
+      if (!currentPostsData.length) { alert("Tidak ada data untuk diekspor."); return; }
+      const tag = document.getElementById("searchTag").value || "export";
+      let dataStr;
+      if (type === 'json') {
+        dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentPostsData, null, 2));
+      } else {
+        const header = "Rank,Author,Handle,Date,Likes,Comments,Reposts,Quotes,Shares,Reach,Content,URL\n";
+        const rows = currentPostsData.map((p, i) =>
+          `${i+1},"${p.author}","${p.handle}","${p.posted_date}",${p.metrics.likes},${p.metrics.replies},${p.metrics.reposts||0},${p.metrics.quotes||0},${p.metrics.shares||0},${p.metrics.reach},"${p.content.replace(/"/g,'""')}","${p.post_url}"`
+        ).join("\n");
+        dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(header + rows);
       }
-      const dataStr = type === 'json' 
-        ? "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentPostsData, null, 2))
-        : "data:text/csv;charset=utf-8," + encodeURIComponent("ID,Tag,Author,Country,Date,Reach,Replies,Likes,Content,PostURL\n" + currentPostsData.map(p => `"${p.id}","${p.tag}","${p.author}","${p.country}","${p.posted_date}",${p.metrics.reach},${p.metrics.replies},${p.metrics.likes},"${p.content.replace(/"/g, '""')}","${p.post_url}"`).join("\n"));
-      
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `threads_data_${activeTag || 'export'}.${type}`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `threadlens_${tag}_top20.${type}`;
+      document.body.appendChild(a); a.click(); a.remove();
     }
 
-    // Inisialisasi Sistem: Cek Sesi Login Tersimpan
-    const savedUser = localStorage.getItem("threadlens_user");
-    if (savedUser) {
-      try {
-        currentUser = JSON.parse(savedUser);
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainDashboard").classList.remove("hidden");
-        updateRoleUI();
-        checkBackendStatus();
-        fetchTags(1);
-      } catch (err) {
-        showLoginScreen();
-      }
-    } else {
-      showLoginScreen();
+    // ===== INIT =====
+    const saved = localStorage.getItem("threadlens_user");
+    if (saved) {
+      try { currentUser = JSON.parse(saved); enterDashboard(); }
+      catch { handleLogout(); }
     }
   </script>
 </body>

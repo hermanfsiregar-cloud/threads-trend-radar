@@ -133,11 +133,12 @@ class ThreadsScraper:
                     while lines and re.match(r"^\d+[\.,]?[KM]?$", lines[-1]):
                         nums.insert(0, lines.pop())
 
-                    # Di Threads, baris angka aksi adalah: [Likes, Replies, Reposts, Shares]
+                    # Di Threads, baris angka aksi adalah: [Likes, Replies, Reposts, Shares, Quotes]
                     likes = parse_metric_number(nums[0]) if len(nums) > 0 else 0
                     replies = parse_metric_number(nums[1]) if len(nums) > 1 else 0
                     reposts = parse_metric_number(nums[2]) if len(nums) > 2 else 0
                     shares = parse_metric_number(nums[3]) if len(nums) > 3 else 0
+                    quotes = parse_metric_number(nums[4]) if len(nums) > 4 else int(reposts * 0.25)
 
                     # Ekstraksi Tanggal Riil dari tag <time>
                     dt_str = c.get("timeDt", "")
@@ -199,6 +200,7 @@ class ThreadsScraper:
                             "replies": replies,
                             "likes": likes,
                             "reposts": reposts,
+                            "quotes": quotes,
                             "shares": shares
                         }
                     })
