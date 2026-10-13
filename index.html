@@ -158,21 +158,22 @@
             <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Tagging Terdaftar</label>
             <div class="relative">
               <i class="mdi mdi-pound text-[#4F46E5] absolute left-3 top-2.5 pointer-events-none"></i>
-              <select id="searchTag" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+              <select id="searchTag" onchange="onSearchTagChanged()" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none font-medium">
                 <option value="">-- Pilih Tagging --</option>
               </select>
               <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
             </div>
           </div>
 
-          <!-- 2. Pilih Tanggal Berapa (Date Picker Opsional) -->
+          <!-- 2. Pilih Tanggal (Type Data Select) -->
           <div class="md:col-span-3">
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="text-[11px] font-semibold text-slate-700 block">Tanggal Postingan</label>
-              <button type="button" onclick="document.getElementById('searchDate').value=''" class="text-[10px] text-indigo-600 hover:underline">Semua Tanggal</button>
-            </div>
+            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Tanggal Postingan</label>
             <div class="relative">
-              <input type="date" id="searchDate" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition" />
+              <i class="mdi mdi-calendar-blank text-[#4F46E5] absolute left-3 top-2.5 pointer-events-none"></i>
+              <select id="searchDate" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
+                <option value="">Semua Tanggal (Default / Top 20)</option>
+              </select>
+              <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
             </div>
           </div>
 
@@ -354,10 +355,11 @@
       }
     }
 
-    function goToSearch(tag) {
+    async function goToSearch(tag) {
       switchTab('search');
       const sel = document.getElementById("searchTag");
       sel.value = tag;
+      await onSearchTagChanged();
       executeSearch();
     }
 
@@ -502,7 +504,36 @@
         data.items.filter(t => t.status === "ready").forEach(t => {
           sel.innerHTML += `<option value="${t.tag}" ${t.tag === currentVal ? 'selected' : ''}>#${t.tag} (${t.total_posts} posts)</option>`;
         });
+        if (sel.value) {
+          onSearchTagChanged();
+        }
       } catch (e) { console.warn(e); }
+    }
+
+    async function onSearchTagChanged() {
+      const tag = document.getElementById("searchTag").value;
+      const dateSel = document.getElementById("searchDate");
+      dateSel.innerHTML = '<option value="">Semua Tanggal (Default / Top 20)</option>';
+      if (!tag) return;
+
+      try {
+        const res = await fetch(`${API}/api/posts?tag=${encodeURIComponent(tag)}&limit=50`);
+        if (res.ok) {
+          const data = await res.json();
+          const dateMap = {};
+          (data.items || []).forEach(p => {
+            if (p.posted_date) {
+              dateMap[p.posted_date] = (dateMap[p.posted_date] || 0) + 1;
+            }
+          });
+          const sortedDates = Object.keys(dateMap).sort().reverse();
+          sortedDates.forEach(d => {
+            dateSel.innerHTML += `<option value="${d}">${d} (${dateMap[d]} post)</option>`;
+          });
+        }
+      } catch (e) {
+        console.warn(e);
+      }
     }
 
     const METRIC_LABELS = {
@@ -564,7 +595,7 @@
         }
 
         currentPostsData = data.items;
-        renderPosts(data.items, metric, targetDate);
+        renderPosts(data.items, metric, targetDate, data.filter_note);
       } catch (e) {
         grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-sm text-slate-500">Gagal memuat data.</p></div>';
       } finally {
@@ -589,19 +620,28 @@
       return (n || 0).toLocaleString();
     }
 
-    function renderPosts(posts, metric, targetDate) {
+    function renderPosts(posts, metric, targetDate, filterNote) {
       const grid = document.getElementById("postsGrid");
       if (posts.length === 0) {
         grid.innerHTML = `
           <div class="col-span-full text-center py-12 bg-white border border-slate-200 rounded-2xl shadow-sm">
             <i class="mdi mdi-emoticon-sad-outline text-3xl text-slate-300 block mb-2"></i>
             <p class="text-sm font-semibold text-slate-800">Tidak ada postingan ditemukan ${targetDate ? 'pada tanggal ' + targetDate : ''}</p>
-            <p class="text-xs text-slate-500 mt-1">Coba kosongkan filter tanggal atau pilih metrik lain.</p>
+            <p class="text-xs text-slate-500 mt-1">Coba pilih 'Semua Tanggal' atau pilih tanggal lain dari dropdown.</p>
           </div>`;
         return;
       }
 
-      grid.innerHTML = posts.map((p, idx) => {
+      let bannerHtml = '';
+      if (filterNote) {
+        bannerHtml = `
+          <div class="col-span-full p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center gap-2 mb-1">
+            <i class="mdi mdi-information-outline text-amber-600 text-base flex-shrink-0"></i>
+            <span>${filterNote}</span>
+          </div>`;
+      }
+
+      grid.innerHTML = bannerHtml + posts.map((p, idx) => {
         const mainVal = getMetricValue(p, metric);
         const mainLabel = METRIC_LABELS[metric] ? METRIC_LABELS[metric].split(" ")[0] : metric;
 
@@ -668,6 +708,7 @@
         </a>`;
       }).join("");
     }
+
 
     // ===== EXPORT =====
     function exportData(type) {

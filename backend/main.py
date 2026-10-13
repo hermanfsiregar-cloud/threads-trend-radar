@@ -195,11 +195,6 @@ async def get_posts(
         country=country
     )
 
-    # Filter berdasarkan tanggal jika dipilih user
-    if target_date and target_date.strip():
-        req_date = target_date.strip()
-        posts = [p for p in posts if p.posted_date == req_date]
-
     # Sorting berdasarkan metrik yang dipilih user
     if sort_by == "replies":
         posts.sort(key=lambda p: p.metrics.replies, reverse=True)
@@ -216,6 +211,18 @@ async def get_posts(
     else:
         posts.sort(key=lambda p: p.metrics.likes, reverse=True)
 
+    # Filter berdasarkan tanggal jika dipilih user
+    exact_matched = True
+    filter_note = ""
+    if target_date and target_date.strip():
+        req_date = target_date.strip()
+        matched = [p for p in posts if p.posted_date == req_date]
+        if matched:
+            posts = matched
+        else:
+            exact_matched = False
+            filter_note = f"Tidak ada postingan Threads pada tanggal {req_date}. Menampilkan 20 postingan terbaik yang tersedia untuk #{clean_tag}:"
+
     # Limit hasil ke top-N (default 20)
     posts = posts[:limit]
 
@@ -229,6 +236,9 @@ async def get_posts(
         "status": tag_obj.status,
         "status_message": tag_obj.status_message,
         "sort_by": sort_by,
+        "target_date": target_date or "",
+        "exact_date_matched": exact_matched,
+        "filter_note": filter_note,
         "items": posts[start_idx:end_idx],
         "pagination": {
             "page": page,
