@@ -211,19 +211,29 @@ async def get_posts(
     else:
         posts.sort(key=lambda p: p.metrics.likes, reverse=True)
 
-    # Filter berdasarkan tanggal jika dipilih user
-    exact_matched = True
-    filter_note = ""
+    # 1. Filter Tanggal KETAT jika diisi oleh user
+    # Mau berapapun hasilnya (1, 3, 10, atau 0), tampilkan HANYA yang tanggalnya persis sesuai!
     if target_date and target_date.strip():
         req_date = target_date.strip()
-        matched = [p for p in posts if p.posted_date == req_date]
-        if matched:
-            posts = matched
-        else:
-            exact_matched = False
-            filter_note = f"Tidak ada postingan Threads pada tanggal {req_date}. Menampilkan 20 postingan terbaik yang tersedia untuk #{clean_tag}:"
+        posts = [p for p in posts if p.posted_date == req_date]
 
-    # Limit hasil ke top-N (default 20)
+    # 2. Sorting berdasarkan metrik yang dipilih user
+    if sort_by == "replies":
+        posts.sort(key=lambda p: p.metrics.replies, reverse=True)
+    elif sort_by == "likes":
+        posts.sort(key=lambda p: p.metrics.likes, reverse=True)
+    elif sort_by == "reposts":
+        posts.sort(key=lambda p: p.metrics.reposts, reverse=True)
+    elif sort_by == "quotes":
+        posts.sort(key=lambda p: getattr(p.metrics, "quotes", 0), reverse=True)
+    elif sort_by == "shares":
+        posts.sort(key=lambda p: p.metrics.shares, reverse=True)
+    elif sort_by == "newest":
+        posts.sort(key=lambda p: p.posted_date, reverse=True)
+    else:
+        posts.sort(key=lambda p: p.metrics.likes, reverse=True)
+
+    # 3. Maksimal 20 tertinggi berdasarkan data yang dipilih
     posts = posts[:limit]
 
     total_items = len(posts)
@@ -233,12 +243,10 @@ async def get_posts(
 
     return {
         "tag": clean_tag,
-        "status": tag_obj.status,
-        "status_message": tag_obj.status_message,
+        "status": "ready",
+        "status_message": f"Ditemukan {total_items} postingan",
         "sort_by": sort_by,
         "target_date": target_date or "",
-        "exact_date_matched": exact_matched,
-        "filter_note": filter_note,
         "items": posts[start_idx:end_idx],
         "pagination": {
             "page": page,
@@ -250,9 +258,9 @@ async def get_posts(
         }
     }
 
-# POST REGISTER TAG DENGAN ASYNC BACKGROUND SCRAPER
+# POST REGISTER TAG: HANYA TAMBAH DATA MASTER SAJA (Tanpa langsung scraping)
 @app.post("/api/tags/register")
-async def register_tag(
+def register_tag(
     tag: str, 
     country: str = "ID",
     x_user_role: Optional[str] = Header(None, description="Role pengakses: super_admin, admin, user")
@@ -280,24 +288,18 @@ async def register_tag(
             total_comments=0,
             total_likes=0,
             growth="+New",
-            status="scraping",
-            status_message="Sedang memindai Threads di latar belakang...",
+            status="ready",
+            status_message="Terdaftar",
             last_scraped_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         MASTER_TAGS.append(new_tag)
 
-        # Trigger Asynchronous Background Scraping secara instan tanpa memblokir response
-        asyncio.create_task(perform_background_scraping(clean_tag, country))
-
         return {
-            "status": "queued",
-            "message": f"Tag #{clean_tag} berhasil ditambahkan dan proses background scraping telah dimulai.",
+            "status": "created",
+            "message": f"Tag #{clean_tag} berhasil didaftarkan.",
             "tag": new_tag
         }
     else:
-        # Jika sudah ada tetapi statusnya belum ready atau ingin refresh
-        if existing.status != "scraping":
-            asyncio.create_task(perform_background_scraping(clean_tag, country))
         return {
             "status": "exists",
             "message": f"Tag #{clean_tag} sudah terdaftar.",

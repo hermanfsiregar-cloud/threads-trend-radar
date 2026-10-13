@@ -97,7 +97,7 @@
       </button>
     </div>
 
-    <!-- ===== TAB 1: KELOLA TAGGING (Tambah Tag Tanpa Filter Tanggal) ===== -->
+    <!-- ===== TAB 1: KELOLA TAGGING (Hanya Tambah Data Master Tagging Tanpa Search) ===== -->
     <div id="panelRegister" class="space-y-5">
       <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
         <div>
@@ -105,8 +105,8 @@
             <i class="mdi mdi-tag-plus-outline text-[#4F46E5] text-lg"></i>
             Tambah Tagging Baru
           </h2>
-          <p class="text-xs text-[#475569] mt-0.5" id="registerHint">
-            Admin & Super Admin dapat mendaftarkan kata kunci/tagging baru (tanpa tanggal). Data akan di-scrape langsung dari Threads secara asinkron di latar belakang.
+          <p class="text-xs text-[#475569] mt-0.5">
+            Daftarkan kata kunci/tagging baru ke sistem. Pencarian postingan akan dilakukan saat Anda mengakses tab <strong>Cari Postingan</strong>.
           </p>
         </div>
 
@@ -119,12 +119,12 @@
           </div>
           <button id="btnRegister" onclick="registerTag()" class="px-6 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center gap-1.5 transition shadow-sm shadow-indigo-100 whitespace-nowrap">
             <i id="btnRegisterIcon" class="mdi mdi-plus-circle-outline text-lg"></i>
-            <span id="btnRegisterText">Tambah Tag</span>
+            <span id="btnRegisterText">Simpan Tagging</span>
           </button>
         </div>
       </div>
 
-      <!-- Daftar Tag Terdaftar -->
+      <!-- Daftar Tagging Terdaftar -->
       <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -139,61 +139,62 @@
       </div>
     </div>
 
-    <!-- ===== TAB 2: CARI POSTINGAN (Tagging, Tanggal, Base On: Komentar, Like, Repost, Quote, Send To) ===== -->
+    <!-- ===== TAB 2: CARI POSTINGAN (Tagging -> Tanggal -> Base On -> Tampilkan Hasil Tertinggi) ===== -->
     <div id="panelSearch" class="space-y-5 hidden">
 
-      <!-- Search Form -->
+      <!-- Form Pencarian -->
       <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
         <div>
           <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <i class="mdi mdi-magnify text-[#4F46E5] text-lg"></i>
-            Pencarian Postingan Berdasarkan Tagging
+            Pencarian Postingan Berdasarkan Tagging & Tanggal
           </h2>
-          <p class="text-xs text-[#475569] mt-0.5">Pilih tagging terdaftar, tentukan tanggal (opsional), dan pilih metrik untuk menampilkan 20 postingan tertinggi.</p>
+          <p class="text-xs text-[#475569] mt-0.5">
+            Pilih tagging yang terdaftar, tanggal postingan yang ingin dicari, dan pilih metrik untuk mengurutkan nilai tertinggi (maksimal 20).
+          </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-          <!-- 1. Pilih Tagging Terdaftar -->
+          <!-- 1. Tagging yang sudah di-register -->
           <div class="md:col-span-4">
-            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Tagging Terdaftar</label>
+            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">1. Pilih Tagging</label>
             <div class="relative">
               <i class="mdi mdi-pound text-[#4F46E5] absolute left-3 top-2.5 pointer-events-none"></i>
-              <select id="searchTag" onchange="onSearchTagChanged()" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none font-medium">
-                <option value="">-- Pilih Tagging --</option>
+              <select id="searchTag" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none font-medium">
+                <option value="">-- Pilih Tagging Terdaftar --</option>
               </select>
               <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
             </div>
           </div>
 
-          <!-- 2. Pilih Tanggal (Type Data Select) -->
+          <!-- 2. Tanggal Berapa -->
           <div class="md:col-span-3">
-            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Tanggal Postingan</label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-[11px] font-semibold text-slate-700 block">2. Tanggal Postingan</label>
+              <button type="button" onclick="document.getElementById('searchDate').value=''" class="text-[10px] text-indigo-600 hover:underline">Semua Tanggal</button>
+            </div>
             <div class="relative">
-              <i class="mdi mdi-calendar-blank text-[#4F46E5] absolute left-3 top-2.5 pointer-events-none"></i>
-              <select id="searchDate" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none">
-                <option value="">Semua Tanggal (Default / Top 20)</option>
-              </select>
-              <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+              <input type="date" id="searchDate" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition" />
             </div>
           </div>
 
-          <!-- 3. Base On (Select Data: Komentar, Like, Repost, Quote, Send To) -->
+          <!-- 3. Base On Apa (Type Data Select: Komentar, Like, Repost, Quote, Send To) -->
           <div class="md:col-span-3">
-            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">Base On (Urutkan)</label>
+            <label class="text-[11px] font-semibold text-slate-700 block mb-1.5">3. Base On (Pilih Metrik)</label>
             <div class="relative">
               <i class="mdi mdi-sort-descending text-amber-600 absolute left-3 top-2.5 pointer-events-none"></i>
               <select id="searchMetric" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition appearance-none font-medium">
-                <option value="likes" selected>❤️ Like Tertinggi</option>
-                <option value="replies">💬 Komentar Tertinggi</option>
-                <option value="reposts">🔄 Repost Tertinggi</option>
-                <option value="quotes">💭 Quote Tertinggi</option>
-                <option value="shares">📤 Send To Tertinggi</option>
+                <option value="likes" selected>❤️ Like</option>
+                <option value="replies">💬 Komentar</option>
+                <option value="reposts">🔄 Repost</option>
+                <option value="quotes">💭 Quote</option>
+                <option value="shares">📤 Send To</option>
               </select>
               <i class="mdi mdi-chevron-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
             </div>
           </div>
 
-          <!-- 4. Tombol Search -->
+          <!-- 4. Tombol Cari Postingan -->
           <div class="md:col-span-2 flex items-end">
             <button id="btnSearch" onclick="executeSearch()" class="w-full py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-sm shadow-indigo-100">
               <i id="btnSearchIcon" class="mdi mdi-magnify text-lg"></i>
@@ -203,17 +204,17 @@
         </div>
       </div>
 
-      <!-- Hasil Pencarian: 20 Tertinggi (Klik Card Auto Direct ke Threads) -->
+      <!-- Hasil Pencarian -->
       <div id="searchResultsSection" class="space-y-4 hidden">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
           <div>
             <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
               <i class="mdi mdi-trophy-outline text-[#F59E0B] text-lg"></i>
-              Top 20 Postingan: <span id="resultTagLabel" class="text-[#4F46E5] font-mono">#tag</span>
+              Hasil Postingan: <span id="resultTagLabel" class="text-[#4F46E5] font-mono">#tag</span>
               <span id="resultMetricLabel" class="text-xs font-normal text-slate-500 ml-1">berdasarkan Like</span>
             </h2>
             <p class="text-[11px] text-slate-500 mt-0.5">
-              <span id="resultDateFilterNote" class="font-medium text-slate-700">Semua Tanggal</span> • Klik kartu postingan mana saja untuk membuka langsung di Threads.
+              Filter: <span id="resultDateFilterNote" class="font-semibold text-slate-700">Semua Tanggal</span> • Klik salah satu kartu postingan untuk langsung membuka di Threads.
             </p>
           </div>
           <div class="flex items-center gap-2">
@@ -238,7 +239,6 @@
   <script>
     const API = "http://127.0.0.1:8000";
     let currentUser = null;
-    let pollingInterval = null;
     let currentPostsData = [];
 
     // ===== AUTH =====
@@ -285,7 +285,6 @@
     }
 
     function handleLogout() {
-      if (pollingInterval) clearInterval(pollingInterval);
       localStorage.removeItem("threadlens_user");
       currentUser = null;
       document.getElementById("mainDashboard").classList.add("hidden");
@@ -355,15 +354,13 @@
       }
     }
 
-    async function goToSearch(tag) {
+    function goToSearch(tag) {
       switchTab('search');
       const sel = document.getElementById("searchTag");
       sel.value = tag;
-      await onSearchTagChanged();
-      executeSearch();
     }
 
-    // ===== TAB 1: KELOLA TAGGING (Tanpa Date) =====
+    // ===== TAB 1: KELOLA TAGGING (Murni Simpan Data Master Tanpa Langsung Scraping) =====
     async function registerTag() {
       const input = document.getElementById("newTagInput");
       let val = input.value.trim().replace("#", "").toLowerCase();
@@ -375,7 +372,7 @@
       const text = document.getElementById("btnRegisterText");
       btn.disabled = true;
       icon.className = "mdi mdi-loading mdi-spin text-lg";
-      text.textContent = "Mendaftarkan...";
+      text.textContent = "Menyimpan...";
 
       try {
         const res = await fetch(`${API}/api/tags/register?tag=${encodeURIComponent(val)}&country=ID`, {
@@ -384,12 +381,11 @@
         if (!res.ok) { const err = await res.json(); throw new Error(err.detail); }
         input.value = "";
         await loadRegisteredTags();
-        startPolling(val);
       } catch (err) { alert(err.message); }
       finally {
         btn.disabled = false;
         icon.className = "mdi mdi-plus-circle-outline text-lg";
-        text.textContent = "Tambah Tag";
+        text.textContent = "Simpan Tagging";
       }
     }
 
@@ -409,43 +405,29 @@
         c.innerHTML = `
           <div class="text-center py-8 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
             <i class="mdi mdi-tag-off-outline text-2xl text-slate-300 block mb-1"></i>
-            <p class="text-xs text-slate-500">Belum ada tagging terdaftar. Masukkan kata kunci baru di atas untuk mulai scraping.</p>
+            <p class="text-xs text-slate-500">Belum ada tagging terdaftar. Tambahkan kata kunci di atas.</p>
           </div>`;
         return;
       }
       const canManage = currentUser && currentUser.role !== "user";
       c.innerHTML = tags.map(t => {
-        const isScraping = t.status === "scraping";
-        const isFailed = t.status === "failed";
-        let statusHtml = '';
-        if (isScraping) {
-          statusHtml = '<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold flex items-center gap-1 animate-pulse"><i class="mdi mdi-loading mdi-spin"></i> Memindai...</span>';
-        } else if (isFailed) {
-          statusHtml = '<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-semibold flex items-center gap-1"><i class="mdi mdi-alert-circle"></i> Gagal</span>';
-        } else {
-          statusHtml = `<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex items-center gap-1"><i class="mdi mdi-check-circle"></i> ${t.total_posts} posts</span>`;
-        }
-
         return `
-          <div class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-200 transition group">
+          <div class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-200 transition">
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-lg bg-indigo-50 text-[#4F46E5] flex items-center justify-center font-bold text-xs">
                 <i class="mdi mdi-pound text-base"></i>
               </div>
               <div>
                 <div class="text-xs font-bold text-slate-900">#${t.tag}</div>
-                <div class="text-[10px] text-[#475569] font-mono">${t.last_scraped_at ? 'Scraped: ' + t.last_scraped_at : 'Belum di-scrape'}</div>
+                <div class="text-[10px] text-slate-400 font-mono">Didaftarkan: ${t.last_scraped_at || '-'}</div>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              ${statusHtml}
+              <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">Terdaftar</span>
               <button onclick="goToSearch('${t.tag}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-semibold flex items-center gap-1 transition" title="Cari postingan tag ini">
-                <i class="mdi mdi-magnify text-xs"></i> Cari
+                <i class="mdi mdi-magnify text-xs"></i> Cari Postingan
               </button>
               ${canManage ? `
-                <button onclick="refreshTag('${t.tag}')" title="Scrape Ulang" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition">
-                  <i class="mdi mdi-refresh text-sm"></i>
-                </button>
                 <button onclick="deleteTag('${t.tag}')" title="Hapus Tag" class="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition">
                   <i class="mdi mdi-trash-can-outline text-sm"></i>
                 </button>
@@ -453,32 +435,6 @@
             </div>
           </div>`;
       }).join("");
-    }
-
-    function startPolling(tag) {
-      if (pollingInterval) clearInterval(pollingInterval);
-      pollingInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`${API}/api/tags/status/${tag}`);
-          if (!res.ok) return;
-          const d = await res.json();
-          if (d.status === "ready" || d.status === "failed") {
-            clearInterval(pollingInterval); pollingInterval = null;
-          }
-          loadRegisteredTags();
-        } catch (e) { console.warn(e); }
-      }, 2500);
-    }
-
-    async function refreshTag(tag) {
-      if (!currentUser || currentUser.role === "user") return;
-      try {
-        await fetch(`${API}/api/tags/refresh?tag=${tag}&country=ID`, {
-          method: "POST", headers: { "x-user-role": currentUser.role }
-        });
-        loadRegisteredTags();
-        startPolling(tag);
-      } catch (e) { alert("Gagal merefresh: " + e.message); }
     }
 
     async function deleteTag(tag) {
@@ -492,7 +448,7 @@
       } catch (e) { alert(e.message); }
     }
 
-    // ===== TAB 2: SEARCH POSTS =====
+    // ===== TAB 2: CARI POSTINGAN =====
     async function populateSearchTagDropdown() {
       try {
         const res = await fetch(`${API}/api/tags?sort_by=reach&page=1&page_size=50`);
@@ -500,40 +456,11 @@
         const data = await res.json();
         const sel = document.getElementById("searchTag");
         const currentVal = sel.value;
-        sel.innerHTML = '<option value="">-- Pilih Tagging --</option>';
-        data.items.filter(t => t.status === "ready").forEach(t => {
-          sel.innerHTML += `<option value="${t.tag}" ${t.tag === currentVal ? 'selected' : ''}>#${t.tag} (${t.total_posts} posts)</option>`;
+        sel.innerHTML = '<option value="">-- Pilih Tagging Terdaftar --</option>';
+        data.items.forEach(t => {
+          sel.innerHTML += `<option value="${t.tag}" ${t.tag === currentVal ? 'selected' : ''}>#${t.tag}</option>`;
         });
-        if (sel.value) {
-          onSearchTagChanged();
-        }
       } catch (e) { console.warn(e); }
-    }
-
-    async function onSearchTagChanged() {
-      const tag = document.getElementById("searchTag").value;
-      const dateSel = document.getElementById("searchDate");
-      dateSel.innerHTML = '<option value="">Semua Tanggal (Default / Top 20)</option>';
-      if (!tag) return;
-
-      try {
-        const res = await fetch(`${API}/api/posts?tag=${encodeURIComponent(tag)}&limit=50`);
-        if (res.ok) {
-          const data = await res.json();
-          const dateMap = {};
-          (data.items || []).forEach(p => {
-            if (p.posted_date) {
-              dateMap[p.posted_date] = (dateMap[p.posted_date] || 0) + 1;
-            }
-          });
-          const sortedDates = Object.keys(dateMap).sort().reverse();
-          sortedDates.forEach(d => {
-            dateSel.innerHTML += `<option value="${d}">${d} (${dateMap[d]} post)</option>`;
-          });
-        }
-      } catch (e) {
-        console.warn(e);
-      }
     }
 
     const METRIC_LABELS = {
@@ -555,7 +482,7 @@
       const text = document.getElementById("btnSearchText");
       btn.disabled = true;
       icon.className = "mdi mdi-loading mdi-spin text-lg";
-      text.textContent = "Memuat...";
+      text.textContent = "Mencari...";
 
       document.getElementById("searchResultsSection").classList.remove("hidden");
       document.getElementById("resultTagLabel").textContent = "#" + tag;
@@ -583,21 +510,10 @@
         if (!res.ok) throw new Error();
         const data = await res.json();
 
-        if (data.status === "scraping") {
-          grid.innerHTML = `
-            <div class="col-span-full bg-white border border-indigo-100 rounded-2xl p-10 text-center space-y-3 shadow-sm animate-pulse">
-              <i class="mdi mdi-radar mdi-spin text-3xl text-[#4F46E5] block"></i>
-              <p class="text-sm font-bold text-slate-900">Sedang Memindai Threads untuk #${tag}...</p>
-              <p class="text-xs text-[#475569]">${data.status_message}</p>
-            </div>`;
-          startPolling(tag);
-          return;
-        }
-
-        currentPostsData = data.items;
-        renderPosts(data.items, metric, targetDate, data.filter_note);
+        currentPostsData = data.items || [];
+        renderPosts(currentPostsData, metric, targetDate, tag);
       } catch (e) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-sm text-slate-500">Gagal memuat data.</p></div>';
+        grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-sm text-slate-500">Gagal memuat data pencarian.</p></div>';
       } finally {
         btn.disabled = false;
         icon.className = "mdi mdi-magnify text-lg";
@@ -620,33 +536,30 @@
       return (n || 0).toLocaleString();
     }
 
-    function renderPosts(posts, metric, targetDate, filterNote) {
+    function renderPosts(posts, metric, targetDate, tag) {
       const grid = document.getElementById("postsGrid");
-      if (posts.length === 0) {
+
+      // Jika tidak ada postingan pada tanggal yang dipilih
+      if (!posts || posts.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full text-center py-12 bg-white border border-slate-200 rounded-2xl shadow-sm">
-            <i class="mdi mdi-emoticon-sad-outline text-3xl text-slate-300 block mb-2"></i>
-            <p class="text-sm font-semibold text-slate-800">Tidak ada postingan ditemukan ${targetDate ? 'pada tanggal ' + targetDate : ''}</p>
-            <p class="text-xs text-slate-500 mt-1">Coba pilih 'Semua Tanggal' atau pilih tanggal lain dari dropdown.</p>
+          <div class="col-span-full text-center py-12 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-2">
+            <i class="mdi mdi-calendar-remove-outline text-4xl text-slate-300 block"></i>
+            <p class="text-sm font-bold text-slate-800">
+              Tidak ada postingan untuk #${tag} ${targetDate ? 'pada tanggal ' + targetDate : ''}
+            </p>
+            <p class="text-xs text-slate-500">
+              ${targetDate ? 'Hasil pencarian Threads tidak menemukan postingan pada tanggal persis tersebut. Silakan kosongkan tanggal untuk melihat seluruh postingan yang tersedia.' : 'Belum ada postingan yang ditemukan di Threads untuk kata kunci ini.'}
+            </p>
           </div>`;
         return;
       }
 
-      let bannerHtml = '';
-      if (filterNote) {
-        bannerHtml = `
-          <div class="col-span-full p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center gap-2 mb-1">
-            <i class="mdi mdi-information-outline text-amber-600 text-base flex-shrink-0"></i>
-            <span>${filterNote}</span>
-          </div>`;
-      }
-
-      grid.innerHTML = bannerHtml + posts.map((p, idx) => {
+      grid.innerHTML = posts.map((p, idx) => {
         const mainVal = getMetricValue(p, metric);
         const mainLabel = METRIC_LABELS[metric] ? METRIC_LABELS[metric].split(" ")[0] : metric;
 
         return `
-        <a href="${p.post_url}" target="_blank" rel="noopener noreferrer"
+        <div onclick="window.open('${p.post_url}', '_blank')"
            class="block bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-[#4F46E5] hover:shadow-lg transition-all cursor-pointer group relative">
 
           <!-- Ranking Badge (#1 to #20) -->
@@ -664,7 +577,7 @@
               <div class="text-[10px] text-[#475569] flex items-center gap-1">
                 <span class="truncate">${p.handle}</span>
                 <span>•</span>
-                <span class="font-mono text-slate-600">${p.posted_at_formatted || p.posted_date}</span>
+                <span class="font-mono text-slate-700 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">${p.posted_date}</span>
               </div>
             </div>
             <!-- Primary Selected Metric Highlighted -->
@@ -705,10 +618,9 @@
           <div class="mt-2.5 flex items-center justify-end text-[10px] text-indigo-400 group-hover:text-[#4F46E5] font-semibold transition">
             Buka Postingan Ini di Threads <i class="mdi mdi-arrow-top-right text-xs ml-0.5"></i>
           </div>
-        </a>`;
+        </div>`;
       }).join("");
     }
-
 
     // ===== EXPORT =====
     function exportData(type) {
