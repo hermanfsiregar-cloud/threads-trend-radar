@@ -511,7 +511,7 @@
         const data = await res.json();
 
         currentPostsData = data.items || [];
-        renderPosts(currentPostsData, metric, targetDate, tag);
+        renderPosts(data, metric, targetDate, tag);
       } catch (e) {
         grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-sm text-slate-500">Gagal memuat data pencarian.</p></div>';
       } finally {
@@ -536,20 +536,45 @@
       return (n || 0).toLocaleString();
     }
 
-    function renderPosts(posts, metric, targetDate, tag) {
+    function renderPosts(data, metric, targetDate, tag) {
       const grid = document.getElementById("postsGrid");
+      const posts = data.items || [];
+      const totalMatching = data.total_matching !== undefined ? data.total_matching : posts.length;
+      const totalScraped = data.total_scraped !== undefined ? data.total_scraped : posts.length;
 
-      // Jika tidak ada postingan pada tanggal yang dipilih
-      if (!posts || posts.length === 0) {
+      // Update header label
+      const tagLabel = document.getElementById("resultTagLabel");
+      const metricLabel = document.getElementById("resultMetricLabel");
+      const dateNote = document.getElementById("resultDateFilterNote");
+      
+      tagLabel.textContent = "#" + tag;
+      metricLabel.textContent = "berdasarkan " + (METRIC_LABELS[metric] || metric);
+      
+      if (posts.length >= 20) {
+        dateNote.innerHTML = `${targetDate ? 'Tanggal: ' + targetDate : 'Semua Tanggal'} • Ditemukan <strong>${totalMatching}</strong> postingan, menampilkan <strong>20 ${METRIC_LABELS[metric]}</strong>. Klik kartu untuk membuka postingan.`;
+      } else if (posts.length > 0) {
+        dateNote.innerHTML = `${targetDate ? 'Tanggal: ' + targetDate : 'Semua Tanggal'} • Ditemukan <strong>${posts.length}</strong> postingan (< 20), menampilkan <strong>semua hasil</strong>. Klik kartu untuk membuka postingan.`;
+      } else {
+        dateNote.innerHTML = `${targetDate ? 'Tanggal: ' + targetDate : 'Semua Tanggal'} • 0 postingan ditemukan.`;
+      }
+
+      // Jika tidak ada postingan sama sekali
+      if (posts.length === 0) {
+        let msgTitle = "";
+        let msgDesc = "";
+        if (totalScraped === 0) {
+          msgTitle = `Tidak ada postingan yang ditemukan di Threads untuk kata kunci #${tag}`;
+          msgDesc = `Threads tidak mengembalikan postingan publik untuk kata kunci ini. Silakan coba kata kunci lain.`;
+        } else {
+          msgTitle = `Tidak ada postingan untuk #${tag} pada tanggal ${targetDate}`;
+          msgDesc = `Dari postingan Threads yang ditemukan, tidak ada yang diposting pada tanggal ${targetDate}. Kosongkan tanggal postingan jika ingin melihat postingan yang tersedia.`;
+        }
+
         grid.innerHTML = `
           <div class="col-span-full text-center py-12 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-2">
             <i class="mdi mdi-calendar-remove-outline text-4xl text-slate-300 block"></i>
-            <p class="text-sm font-bold text-slate-800">
-              Tidak ada postingan untuk #${tag} ${targetDate ? 'pada tanggal ' + targetDate : ''}
-            </p>
-            <p class="text-xs text-slate-500">
-              ${targetDate ? 'Hasil pencarian Threads tidak menemukan postingan pada tanggal persis tersebut. Silakan kosongkan tanggal untuk melihat seluruh postingan yang tersedia.' : 'Belum ada postingan yang ditemukan di Threads untuk kata kunci ini.'}
-            </p>
+            <p class="text-sm font-bold text-slate-800">${msgTitle}</p>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">${msgDesc}</p>
           </div>`;
         return;
       }

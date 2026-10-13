@@ -195,24 +195,10 @@ async def get_posts(
         country=country
     )
 
-    # Sorting berdasarkan metrik yang dipilih user
-    if sort_by == "replies":
-        posts.sort(key=lambda p: p.metrics.replies, reverse=True)
-    elif sort_by == "likes":
-        posts.sort(key=lambda p: p.metrics.likes, reverse=True)
-    elif sort_by == "reposts":
-        posts.sort(key=lambda p: p.metrics.reposts, reverse=True)
-    elif sort_by == "quotes":
-        posts.sort(key=lambda p: getattr(p.metrics, "quotes", 0), reverse=True)
-    elif sort_by == "shares":
-        posts.sort(key=lambda p: p.metrics.shares, reverse=True)
-    elif sort_by == "newest":
-        posts.sort(key=lambda p: p.posted_date, reverse=True)
-    else:
-        posts.sort(key=lambda p: p.metrics.likes, reverse=True)
+    total_scraped = len(posts)
 
     # 1. Filter Tanggal KETAT jika diisi oleh user
-    # Mau berapapun hasilnya (1, 3, 10, atau 0), tampilkan HANYA yang tanggalnya persis sesuai!
+    # Jika diisi tanggal, HANYA ambil postingan yang tanggal aslinya persis sesuai!
     if target_date and target_date.strip():
         req_date = target_date.strip()
         posts = [p for p in posts if p.posted_date == req_date]
@@ -233,7 +219,8 @@ async def get_posts(
     else:
         posts.sort(key=lambda p: p.metrics.likes, reverse=True)
 
-    # 3. Maksimal 20 tertinggi berdasarkan data yang dipilih
+    # 3. Maksimal 20 tertinggi: jika >=20 ambil 20, jika <20 ambil semua
+    total_matching = len(posts)
     posts = posts[:limit]
 
     total_items = len(posts)
@@ -244,7 +231,9 @@ async def get_posts(
     return {
         "tag": clean_tag,
         "status": "ready",
-        "status_message": f"Ditemukan {total_items} postingan",
+        "total_scraped": total_scraped,
+        "total_matching": total_matching,
+        "status_message": f"Ditemukan {total_matching} postingan",
         "sort_by": sort_by,
         "target_date": target_date or "",
         "items": posts[start_idx:end_idx],
